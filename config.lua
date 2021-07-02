@@ -1,5 +1,7 @@
 Config = {}
 Config.TimeToSearch = 10
+Config.LockBoxLocation = vector3(-2186.59, 4250.07, 48.94)
+Config.TimeToUnlockBox = 10
 
 crates = {
 	["crate_1"] = {

@@ -43,7 +43,7 @@ AddEventHandler('usa_gunraid:search', function(search)
 
 				TriggerClientEvent('usa_gunraid:searchcomplete', source)
 
-				--ADD LOCKBOX TO SOURCE INVENTORY
+				--ADD LOCKBOX TO SOURCE INVENTORY PLACEHOLDER
 
 			end
 
@@ -51,8 +51,31 @@ AddEventHandler('usa_gunraid:search', function(search)
 
 	else
 
-		TriggerClientEvent('usa_gunraid:notify', source, "Already searching!")
+		TriggerClientEvent('usa_gunraid:notify', source, "Someone is already searching this box!")
 
 	end
+
+end)
+
+RegisterServerEvent('usa_gunraid:unlockbox')
+AddEventHandler('usa_gunraid:unlockbox', function()
+
+	local source = source
+
+	--if (player has 1 or more lockboxes in their inventory) then PLACEHOLDER
+		--if (player has 1 or more wrenches in their inventory) then PLACEHOLDER
+
+			TriggerClientEvent('usa_gunraid:unlocking', source)
+
+			--SEND 911 CALL PLACEHOLDER
+
+			SetTimeout(Config.TimeToUnlockBox*1000, function()
+				
+				TriggerClientEvent('usa_gunraid:unlockcomplete', source)
+
+			end)
+
+		--end)
+	--end)
 
 end)

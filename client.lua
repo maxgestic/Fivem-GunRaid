@@ -5,6 +5,8 @@ local searching = false
 local secondsRemaining = 0
 local current_crate = ""
 
+local unlocking = false
+
 function Draw3DText(x, y, z, scl_factor, text, font)
     local onScreen, _x, _y = World3dToScreen2d(x, y, z)
     local p = GetGameplayCamCoords()
@@ -62,8 +64,9 @@ AddEventHandler('usa_gunraid:currentlysearching', function(search)
 end)
 
 RegisterNetEvent('usa_gunraid:toofarclient')
-AddEventHandler('usa_gunraid:toofarclient', function(search)
+AddEventHandler('usa_gunraid:toofarclient', function()
     searching = false
+    unlocking = false
     notify("You moved to far away!")
     current_crate = ""
     secondsRemaining = 0
@@ -71,7 +74,7 @@ AddEventHandler('usa_gunraid:toofarclient', function(search)
 end)
 
 RegisterNetEvent('usa_gunraid:searchcomplete')
-AddEventHandler('usa_gunraid:searchcomplete', function(search)
+AddEventHandler('usa_gunraid:searchcomplete', function()
     ClearPedTasks(GetPlayerPed(-1))
     searching = false
     notify("You found a lockbox of some kind!")
@@ -79,10 +82,41 @@ AddEventHandler('usa_gunraid:searchcomplete', function(search)
     secondsRemaining = 0
 end)
 
+RegisterNetEvent('usa_gunraid:unlocking')
+AddEventHandler('usa_gunraid:unlocking', function()
+    notify("You use the wrench to try and crack open the lockbox!")
+    unlocking = true
+    secondsRemaining = Config.TimeToUnlockBox
+    LoadAnim("mini@repair")
+    TaskPlayAnim(GetPlayerPed(-1), "mini@repair", "fixing_a_ped", 2.0, 2.0, -1, 1, 0, false, false, false)
+end)
+
+RegisterNetEvent('usa_gunraid:unlockcomplete')
+AddEventHandler('usa_gunraid:unlockcomplete', function()
+    ClearPedTasks(GetPlayerPed(-1))
+    unlocking = false
+    notify("You have cracked open the lockbox!")
+    secondsRemaining = 0
+end)
+
+RegisterNetEvent('usa_gunraid:unlockfailed')
+AddEventHandler('usa_gunraid:unlockfailed', function()
+    ClearPedTasks(GetPlayerPed(-1))
+    unlocking = false
+    notify("Your wrench broke and you failed to unlock the box!")
+    secondsRemaining = 0
+end)
+
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
         if searching then
+            Citizen.Wait(1000)
+            if(secondsRemaining > 0)then
+                secondsRemaining = secondsRemaining - 1
+            end
+        end
+        if unlocking then
             Citizen.Wait(1000)
             if(secondsRemaining > 0)then
                 secondsRemaining = secondsRemaining - 1
@@ -179,5 +213,42 @@ Citizen.CreateThread(function ()
             end
 
         end
+
+        if unlocking then
+
+            Draw3DText(Config.LockBoxLocation.x, Config.LockBoxLocation.y, Config.LockBoxLocation.z, 0.5, "Unlocking Box..., " .. secondsRemaining .. " seconds remaining")
+
+            if (Vdist2(GetEntityCoords(PlayerPedId(), false), Config.LockBoxLocation.x, Config.LockBoxLocation.y, Config.LockBoxLocation.z) > 4) then
+
+                TriggerServerEvent('usa_gunraid:toofar')
+
+            end
+
+        end
+
+        if Vdist2(GetEntityCoords(PlayerPedId(), false), Config.LockBoxLocation) < 30 then
+
+            if not unlocking then
+
+                Draw3DText(Config.LockBoxLocation.x, Config.LockBoxLocation.y, Config.LockBoxLocation.z, 0.8,  "Crack Open Lockbox (E)", 0)
+
+                if IsControlJustReleased(1, 38) then
+
+                    if Vdist2(GetEntityCoords(PlayerPedId(), false), Config.LockBoxLocation) < 10 then
+
+                        TriggerServerEvent('usa_gunraid:unlockbox')
+
+                    else
+
+                        notify("Come closer!")
+
+                    end
+
+                end
+
+            end
+
+        end
+
     end
 end)
