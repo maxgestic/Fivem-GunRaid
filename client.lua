@@ -67,7 +67,7 @@ RegisterNetEvent('usa_gunraid:toofarclient')
 AddEventHandler('usa_gunraid:toofarclient', function()
     searching = false
     unlocking = false
-    notify("You moved to far away!")
+    notify("You moved too far away!")
     current_crate = ""
     secondsRemaining = 0
     ClearPedTasks(GetPlayerPed(-1))
@@ -204,7 +204,7 @@ Citizen.CreateThread(function ()
             local progress_pos = crates[current_crate].progress_position
             local crate_pos = crates[current_crate].position
 
-            Draw3DText(progress_pos.x, progress_pos.y, progress_pos.z, 0.5, "Searching for goods, " .. secondsRemaining .. " seconds remaining")
+            Draw3DText(progress_pos.x, progress_pos.y, progress_pos.z, 0.5, "Searching for goods... " .. secondsRemaining .. " seconds remaining")
 
             if (Vdist2(GetEntityCoords(PlayerPedId(), false), crate_pos.x, crate_pos.y, crate_pos.z) > 4) then
 
@@ -216,11 +216,11 @@ Citizen.CreateThread(function ()
 
         if unlocking then
 
-            Draw3DText(Config.LockBoxLocation.x, Config.LockBoxLocation.y, Config.LockBoxLocation.z, 0.5, "Unlocking Box..., " .. secondsRemaining .. " seconds remaining")
+            Draw3DText(Config.LockBoxLocation.x, Config.LockBoxLocation.y, Config.LockBoxLocation.z, 0.5, "Unlocking Box... " .. secondsRemaining .. " seconds remaining")
 
             if (Vdist2(GetEntityCoords(PlayerPedId(), false), Config.LockBoxLocation.x, Config.LockBoxLocation.y, Config.LockBoxLocation.z) > 4) then
 
-                TriggerServerEvent('usa_gunraid:toofar')
+                TriggerServerEvent('usa_gunraid:lockboxtoofar')
 
             end
 

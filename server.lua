@@ -17,6 +17,14 @@ AddEventHandler('usa_gunraid:toofar', function()
 
 end)
 
+RegisterServerEvent('usa_gunraid:lockboxtoofar')
+AddEventHandler('usa_gunraid:lockboxtoofar', function()
+
+	local source = source
+	TriggerClientEvent('usa_gunraid:toofarclient', source)
+
+end)
+
 RegisterServerEvent('usa_gunraid:search')
 AddEventHandler('usa_gunraid:search', function(search)
 	
@@ -70,12 +78,36 @@ AddEventHandler('usa_gunraid:unlockbox', function()
 			--SEND 911 CALL PLACEHOLDER
 
 			SetTimeout(Config.TimeToUnlockBox*1000, function()
-				
-				TriggerClientEvent('usa_gunraid:unlockcomplete', source)
+
+				--if (player has 1 or more lockboxes in their inventory) then PLACEHOLDER
+					--if (player has 1 or more wrenches in their inventory) then PLACEHOLDER
+
+						local random = math.random(100)
+
+						if random > Config.WrenchBreakChance then
+
+							--REMOVE LOCKBOX FROM INVENTORY PLACEHOLDER
+
+							--ADD WEAPON TO INVENTORY PLACEHOLDER
+						
+							TriggerClientEvent('usa_gunraid:unlockcomplete', source)
+
+
+						else
+
+							--REMOVE WRENCH FROM INVENTORY PLACEHOLDER
+
+							TriggerClientEvent('usa_gunraid:unlockfailed', source)
+
+						end
+
+					--end PLACEHOLDER
+
+				--end PLACEHOLDER
 
 			end)
 
-		--end)
-	--end)
+		--end PLACEHOLDER
+	--end PLACEHOLDER
 
 end)
