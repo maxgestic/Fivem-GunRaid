@@ -1,7 +1,8 @@
 Config = {}
-Config.TimeToSearch = 10
-Config.TimeToDownload = 10
-Config.CodeLength = 8
+Config.TimeToSearch = 30
+Config.TimeToDownload = 40
+Config.trackertime = 600
+Config.CodeLength = 14
 Config.LockBoxLocation = vector3(-2186.59, 4250.07, 48.94)
 Config.TimeToUnlockBox = 5
 Config.WrenchBreakChance = 10
@@ -13,7 +14,7 @@ Config.ElevatorLocation = vector4(5012.73, -5748.52, 28.94, 149.95)
 Config.CrateCooldown = 7200
 
 Config.LastHacked = 0
-Config.FailsToLockdown = 5
+Config.FailsToLockdown = 3
 
 Config.DialogWait = 3000
 

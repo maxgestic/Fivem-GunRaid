@@ -211,19 +211,22 @@ AddEventHandler('usa_gunraid:printCodes', function(valid_codes)
 end)
 
 RegisterNetEvent('usa_gunraid:inspectReturn')
-AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, vehicle, cooldown, time)
+AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, hacker, cooldown, time)
 
     time = tonumber(string.format("%." .. 0 .. "f", time))
+    
 
     if cooldown then
     
         if isHacked then
 
-            notify("Tower was hacked " .. time .. " minutes ago and a signal has been found!")
+            notify("Tower was hacked " .. time .. " minutes ago and a signal of the hacker has been found!")
 
-            print(GetEntityCoords(vehicle))
+            hack_src = GetPlayerPed(hacker-1)
 
-            local blip = AddBlipForEntity(vehicle)
+            print(hack_src)
+
+            local blip = AddBlipForEntity(hack_src)
             SetBlipDisplay(blip, 2)
             SetBlipSprite(blip, 459)
             SetBlipFlashes(blip, true)
@@ -233,15 +236,25 @@ AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, vehicle, cooldow
             AddTextComponentString("Hacked Signal")
             EndTextCommandSetBlipName(blip)
 
+            local trackertime = Config.trackertime
 
-            while (Vdist2(GetEntityCoords(vehicle, false), -1082.01, -2869.85, 13.11) > 100) do
+            while true do
 
-                Citizen.Wait(0)
-                -- print("Target still up")
-                
+                Citizen.Wait(1000)
+                if(trackertime > 0)then
+                    trackertime = trackertime - 1
+                end
+
+                if trackertime == 0 then
+
+                    break
+
+                end                
             end
 
-            notify("Signal Lost!")
+            alert("Tracker Signal Lost")
+
+            RemoveBlip(blip)
 
         else
 
@@ -271,7 +284,8 @@ AddEventHandler('usa_gunraid:hackattemptReturn', function(cooldown)
         hack_shown = true
 
         TriggerEvent("mhacking:show")
-        TriggerEvent("mhacking:start",7,35,tower_result)
+        --TriggerEvent("mhacking:start",7,35,tower_result)
+        TriggerEvent("mhacking:seqstart",{6,5,4,3},90,tower_result)
         TriggerServerEvent("usa_gunraid:hackstarted")
 
     end
@@ -361,7 +375,7 @@ AddEventHandler('usa_gunraid:hackgateReturn', function(cooldown)
 
         TriggerEvent("mhacking:show")
         -- TriggerEvent("mhacking:start",7,30,gate_result)
-        TriggerEvent("mhacking:seqstart",{7,6,5,4},90,gate_result_new)
+        TriggerEvent("mhacking:seqstart",{7,6,5,4},60,gate_result_new)
         -- TriggerServerEvent("usa_gunraid:hackstarted")
 
 
@@ -387,8 +401,6 @@ end)
 
 RegisterNetEvent('usa_gunraid:RemoveGate')
 AddEventHandler('usa_gunraid:RemoveGate', function()
-
-    print("can you see this?")
 
     DeleteObject(gate)
     DeleteObject(gate2)
@@ -461,7 +473,6 @@ end)
 
 RegisterCommand("removegate", function (source, args)
 
-    print("test")
     TriggerServerEvent("usa_gunraid:openGate")
 
 end)
@@ -754,21 +765,12 @@ function start_tracking()
     limoMoving = true
     stuffSpawned = true
 
-
-
-    print(GetEntityCoords(d1))
-
     table.insert(targetsEntity,v1)
     TriggerEvent('mtracker:settargets', targetsEntity)
     notify("Starting Tracker hide and show with HOME")
     TriggerEvent('mtracker:start')
 
-    local netVeh = NetworkGetNetworkIdFromEntity(v1)
-
-    print(netVeh)
-
-
-    TriggerServerEvent("usa_gunraid:hackcomplete", netVeh)
+    TriggerServerEvent("usa_gunraid:hackcomplete")
 
     tracker_active = true
     tracker_shown = true
@@ -911,13 +913,25 @@ end)
 
 
 
+-- function tower_result(success, timeremaining, finish)
+--     if success then
+--         hacking = false
+--         hack_shown = false
+--         print('Success with '..timeremaining..'s remaining.')
+--         TriggerEvent('mhacking:hide')
+--         start_tracking()
+--     else
+--         hacking = false
+--         hack_shown = false
+--         print('Failure')
+--         TriggerEvent('mhacking:hide')
+--         TriggerServerEvent('usa_gunraid:hackfail')
+--     end
+-- end
+
 function tower_result(success, timeremaining, finish)
     if success then
-        hacking = false
-        hack_shown = false
         print('Success with '..timeremaining..'s remaining.')
-        TriggerEvent('mhacking:hide')
-        start_tracking()
     else
         hacking = false
         hack_shown = false
@@ -925,14 +939,25 @@ function tower_result(success, timeremaining, finish)
         TriggerEvent('mhacking:hide')
         TriggerServerEvent('usa_gunraid:hackfail')
     end
+
+    if finish and success then
+
+        hacking = false
+        hack_shown = false
+        print('Success with '..timeremaining..'s remaining.')
+        TriggerEvent('mhacking:hide')
+        start_tracking()
+
+    end
+
+    return
+
 end
 
 
 Citizen.CreateThread(function()
     while true do
         Citizen.Wait(0)
-
-        SetNetworkIdAlwaysExistsForPlayer(netVeh, PlayerPedId(), true) 
 
         if hacking then
 
@@ -1025,7 +1050,7 @@ function gate_result_new(success, timeremaining, finish)
         hacking = false
         hack_shown = false
 
-        local password = KeyboardInput("Enter Verification Access Code:", "", 8)
+        local password = KeyboardInput("Enter Verification Access Code:", "", Config.CodeLength)
 
         TriggerServerEvent("usa_gunraid:verifycode", password)
 

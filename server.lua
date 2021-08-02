@@ -3,10 +3,11 @@ local heist = false
 local searchers = {}
 local valid_codes = {}
 local isTowerHacked = false
-local limoVehicle = ""
+local limoVehicle
 local hackFails = 0
 local TowerHacking = false
 local GateHacking = false
+local hacker
 
 RegisterServerEvent('usa_gunraid:toofar')
 AddEventHandler('usa_gunraid:toofar', function()
@@ -165,14 +166,13 @@ AddEventHandler('usa_gunraid:hackstarted', function()
 end)
 
 RegisterServerEvent('usa_gunraid:hackcomplete')
-AddEventHandler('usa_gunraid:hackcomplete', function(vehicle)
+AddEventHandler('usa_gunraid:hackcomplete', function()
 
 	TowerHacking = false
 	
 	isTowerHacked = true
-	limoVehicle = vehicle
 
-	print(GetEntityCoords(vehicle))
+	hacker = source
 
 	Config.LastHacked = os.time() 
 
@@ -186,7 +186,7 @@ AddEventHandler('usa_gunraid:hackfail', function()
 	hackFails = hackFails + 1
 	local locked = false
 
-	print(hackFails)
+	print("Failed Hacks: "..hackFails)
 
 	if (hackFails >= Config.FailsToLockdown) then
 
@@ -250,10 +250,9 @@ AddEventHandler('usa_gunraid:inspectpanel', function()
     end
 
     time = (os.time() - lasthack) / 60
-
-    print(GetEntityCoords(limoVehicle))
+    
 	
-	TriggerClientEvent('usa_gunraid:inspectReturn', source, isTowerHacked, limoVehicle, cooldown, time)
+	TriggerClientEvent('usa_gunraid:inspectReturn', source, isTowerHacked, hacker, cooldown, time)
 
 end)
 
@@ -292,8 +291,6 @@ AddEventHandler('usa_gunraid:verifycode', function(password)
 	for k,v in pairs(valid_codes) do
 
 		if v == password then
-
-			print("code found")
 
 			found = true
 
