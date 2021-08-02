@@ -1,6 +1,12 @@
 local searching = false
 local heist = false
 local searchers = {}
+local valid_codes = {}
+local isTowerHacked = false
+local limoVehicle = ""
+local hackFails = 0
+local TowerHacking = false
+local GateHacking = false
 
 RegisterServerEvent('usa_gunraid:toofar')
 AddEventHandler('usa_gunraid:toofar', function()
@@ -31,35 +37,43 @@ AddEventHandler('usa_gunraid:search', function(search)
 	local source = source
 	local crate = crates[search]
 
+	if (os.time() - crate.lastsearched) < Config.CrateCooldown and crate.lastsearched ~= 0 then
 
-
-	if searching == false then 
-
-		searching = true 
-
-		TriggerClientEvent('usa_gunraid:notify', source, "Starting to search Crate! ("..crate.name..")")
-		TriggerClientEvent('usa_gunraid:currentlysearching', source, search)
-
-		searchers[source] = search
-		local savedSource = source
-
-		SetTimeout(Config.TimeToSearch*1000, function()
-
-			if (searchers[savedSource]) then
-			
-				searching = false
-
-				TriggerClientEvent('usa_gunraid:searchcomplete', source)
-
-				--ADD LOCKBOX TO SOURCE INVENTORY PLACEHOLDER
-
-			end
-
-		end)
+		TriggerClientEvent('usa_gunraid:notify', source, "This box has already been searched and is empty!")
 
 	else
 
-		TriggerClientEvent('usa_gunraid:notify', source, "Someone is already searching this box!")
+		if crate.searching == false then 
+
+			crate.searching = true 
+
+			TriggerClientEvent('usa_gunraid:notify', source, "Starting to search Crate! ("..crate.name..")")
+			TriggerClientEvent('usa_gunraid:currentlysearching', source, search)
+
+			searchers[source] = search
+			local savedSource = source
+
+			SetTimeout(Config.TimeToSearch*1000, function()
+
+				if (searchers[savedSource]) then
+				
+					crate.searching = false
+
+					crate.lastsearched = os.time()
+
+					TriggerClientEvent('usa_gunraid:searchcomplete', source)
+
+					--ADD LOCKBOX TO SOURCE INVENTORY PLACEHOLDER
+
+				end
+
+			end)
+
+		else
+
+			TriggerClientEvent('usa_gunraid:notify', source, "Someone is already searching this box!")
+
+		end
 
 	end
 
@@ -109,5 +123,191 @@ AddEventHandler('usa_gunraid:unlockbox', function()
 
 		--end PLACEHOLDER
 	--end PLACEHOLDER
+
+end)
+
+RegisterServerEvent('usa_gunraid:hackattempt')
+AddEventHandler('usa_gunraid:hackattempt', function()
+
+	local cooldown = false
+	local lasthack = Config.LastHacked
+
+    if TowerHacking then
+
+    	TriggerClientEvent('usa_gunraid:hackattemptAlreadyHacking', source)
+
+
+    else
+
+    	if (os.time() - lasthack) < Config.TowerCooldown and lasthack ~= 0 then
+
+        	cooldown = true
+
+	    else
+
+	        cooldown = false
+	        TowerHacking = true
+
+	    end
+
+    	TriggerClientEvent('usa_gunraid:hackattemptReturn', source, cooldown)
+
+    end
+
+
+end)
+
+RegisterServerEvent('usa_gunraid:hackstarted')
+AddEventHandler('usa_gunraid:hackstarted', function()
+	
+	-- PLACEHOLDER SEND 911 TO POLICE
+
+end)
+
+RegisterServerEvent('usa_gunraid:hackcomplete')
+AddEventHandler('usa_gunraid:hackcomplete', function(vehicle)
+
+	TowerHacking = false
+	
+	isTowerHacked = true
+	limoVehicle = vehicle
+
+	print(GetEntityCoords(vehicle))
+
+	Config.LastHacked = os.time() 
+
+end)
+
+RegisterServerEvent('usa_gunraid:hackfail')
+AddEventHandler('usa_gunraid:hackfail', function()
+
+	TowerHacking = false
+
+	hackFails = hackFails + 1
+	local locked = false
+
+	print(hackFails)
+
+	if (hackFails >= Config.FailsToLockdown) then
+
+		Config.LastHacked = os.time()
+		locked = true
+
+	end
+
+	TriggerClientEvent('usa_gunraid:hackfailReturn', source, locked)
+
+
+
+end)
+
+RegisterServerEvent('usa_gunraid:limoarrived')
+AddEventHandler('usa_gunraid:limoarrived', function()
+	
+	isTowerHacked = false
+	limoVehicle = ""
+
+end)
+
+RegisterServerEvent('usa_gunraid:downloadcomplete')
+AddEventHandler('usa_gunraid:downloadcomplete', function(code)
+	
+	table.insert(valid_codes, code)
+
+end)
+
+RegisterServerEvent('usa_gunraid:getCodes')
+AddEventHandler('usa_gunraid:getCodes', function()
+
+	local codes = ""
+
+	for i,v in pairs (valid_codes) do
+
+		codes = codes .. v .. " "
+
+	end
+
+	print("Getting Codes" .. codes)
+	
+	TriggerClientEvent('usa_gunraid:printCodes',source,  valid_codes)
+
+end)
+
+RegisterServerEvent('usa_gunraid:inspectpanel')
+AddEventHandler('usa_gunraid:inspectpanel', function()
+
+	local cooldown = false
+	local lasthack = Config.LastHacked
+	
+	if (os.time() - lasthack) < Config.TowerCooldown and lasthack ~= 0 then
+
+        cooldown = true
+
+    else
+
+        cooldown = false
+
+    end
+
+    time = (os.time() - lasthack) / 60
+
+    print(GetEntityCoords(limoVehicle))
+	
+	TriggerClientEvent('usa_gunraid:inspectReturn', source, isTowerHacked, limoVehicle, cooldown, time)
+
+end)
+
+RegisterServerEvent('usa_gunraid:BuyFromPed')
+AddEventHandler('usa_gunraid:BuyFromPed', function()
+
+	-- PLACEHOLDER CHECK IF SOURCE HAS 10000 DOLLARS IN CASH
+
+	-- PLACEHOLDER TAKE 10000 DOLLARS FROM SOURCE
+
+	-- GIVE SOURCE ONE HACKING TABLET
+
+	TriggerClientEvent('usa_gunraid:PedInfo', source)
+
+	-- PLACEHOLDER IF SOURCE DOES NOT HAVE 10000 CASH 
+
+	TriggerClientEvent('usa_gunraid:NoMoneyPed', source)
+
+end)
+
+RegisterServerEvent('usa_gunraid:hackgate')
+AddEventHandler('usa_gunraid:hackgate', function()
+
+	local cooldown = false
+	local lasthack = Config.LastHacked
+
+    TriggerClientEvent('usa_gunraid:hackgateReturn', source, cooldown)
+
+end)
+
+RegisterServerEvent('usa_gunraid:verifycode')
+AddEventHandler('usa_gunraid:verifycode', function(password)
+
+	local found = false
+
+	for k,v in pairs(valid_codes) do
+
+		if v == password then
+
+			print("code found")
+
+			found = true
+
+		end
+
+	end
+
+    TriggerClientEvent('usa_gunraid:verifycodeReturn', source, found)
+
+end)
+
+RegisterServerEvent('usa_gunraid:openGate')
+AddEventHandler('usa_gunraid:openGate', function()
+
+    TriggerClientEvent('usa_gunraid:RemoveGate', -1)
 
 end)
