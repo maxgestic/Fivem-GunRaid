@@ -4,6 +4,7 @@ local isThereSignal = false
 local hackFails = 0
 local TowerHacking = false
 local GateHacking = false
+local gateOpen = false
 local hacker
 
 RegisterServerEvent('usa_gunraid:getCodes') -- DEBUG Server Event to get Codes valid
@@ -178,10 +179,22 @@ AddEventHandler('usa_gunraid:verifycode', function(password)
 
 end)
 
-RegisterServerEvent('usa_gunraid:openGate') -- TODO Server Event that gets called when the gate opens
+RegisterServerEvent('usa_gunraid:openGate') -- Server Event that gets called when the gate opens
 AddEventHandler('usa_gunraid:openGate', function()
 
+    gateOpen = true
+
     TriggerClientEvent('usa_gunraid:RemoveGate', -1)
+
+    SetTimeout(Config.GateUnlockTime * 1000, function ()
+
+    	gateOpen = false
+    	
+    	TriggerClientEvent('usa_gunraid:SpawnGate', -1)
+
+    	print("gate closed")
+
+    end)
 
 end)
 

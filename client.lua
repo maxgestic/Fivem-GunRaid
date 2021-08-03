@@ -26,21 +26,8 @@ local gate_open = false
 
 local isPolice = false -- PLACEHOLDER FOR BEING ON DUTY AS POLICE
 
-Citizen.CreateThread(function() --innit thread to spawn props
 
-    local box_blip = AddBlipForCoord(4968.76, -5796.05, 19.9)
-    SetBlipSprite(box_blip, 186)
-    SetBlipColour(box_blip, 1)
-    SetBlipDisplay(box_blip, 0)
-    SetBlipScale(box_blip, 0.9)
-    BeginTextCommandSetBlipName("STRING")
-    AddTextComponentString("Electrical Box")
-    EndTextCommandSetBlipName(box_blip)
-
-    local box_prop = GetHashKey("prop_elecbox_04a")
-    box = CreateObject(box_prop, 4968.76, -5796.05, 19.9, false, true, true)
-    SetEntityHeading(box, 336.06)
-    SetEntityAsMissionEntity(box, true, true)
+function spawn_gate() -- function to spawn gate
 
     gate_open = false
 
@@ -55,8 +42,9 @@ Citizen.CreateThread(function() --innit thread to spawn props
     SetEntityAsMissionEntity(gate2, true, true)
     FreezeEntityPosition(gate2, true)
 
-end)
+    return
 
+end
 
 function Draw3DText(x, y, z, scl_factor, text, font) -- Function to display 3D text
     local onScreen, _x, _y = World3dToScreen2d(x, y, z)
@@ -505,9 +493,11 @@ end)
 RegisterNetEvent('usa_gunraid:verifycodeReturn') -- Event that opens gate if the entered code is valid
 AddEventHandler('usa_gunraid:verifycodeReturn', function(valid)
 
+    time = tonumber(string.format("%." .. 0 .. "f", (Config.GateUnlockTime / 60)))
+
     if valid then
 
-        alert("Access Code Accepted: Gate Opened for 10 minutes!")
+        alert("Access Code Accepted: Gate Opened for ".. time .." minutes!")
         TriggerServerEvent("usa_gunraid:openGate")
 
     else
@@ -524,6 +514,13 @@ AddEventHandler('usa_gunraid:RemoveGate', function()
     DeleteObject(gate)
     DeleteObject(gate2)
     gate_open = true
+
+end)
+
+RegisterNetEvent('usa_gunraid:SpawnGate') -- Event to spawn gate
+AddEventHandler('usa_gunraid:SpawnGate', function()
+
+    spawn_gate()
 
 end)
 
@@ -600,6 +597,27 @@ RegisterCommand("removegate", function (source, args)
 end)
 -- END OF DEBUG COMMANDS --
 
+
+Citizen.CreateThread(function() --innit thread to spawn props
+
+    local box_blip = AddBlipForCoord(4968.76, -5796.05, 19.9)
+    SetBlipSprite(box_blip, 186)
+    SetBlipColour(box_blip, 1)
+    SetBlipDisplay(box_blip, 0)
+    SetBlipScale(box_blip, 0.9)
+    BeginTextCommandSetBlipName("STRING")
+    AddTextComponentString("Electrical Box")
+    EndTextCommandSetBlipName(box_blip)
+
+    local box_prop = GetHashKey("prop_elecbox_04a")
+    box = CreateObject(box_prop, 4968.76, -5796.05, 19.9, false, true, true)
+    SetEntityHeading(box, 336.06)
+    SetEntityAsMissionEntity(box, true, true)
+
+    spawn_gate()
+
+end)
+
 Citizen.CreateThread(function() -- NPC Conversation 
 
     ped = GetHashKey("mp_m_weapexp_01")
@@ -673,6 +691,7 @@ Citizen.CreateThread(function() -- NPC Conversation
         end
 
     end 
+
 end)
 
 Citizen.CreateThread(function() -- Hack & Inspect Tower 

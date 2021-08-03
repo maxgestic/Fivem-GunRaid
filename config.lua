@@ -12,6 +12,7 @@ Config.TowerCooldown = 7200 -- How many seconds the cell tower will be on cooldo
 Config.TowerLocation = vector3(750.96, 1273.89, 360.30) -- Location of the cell tower hacking spot
 Config.LastHacked = 0 -- Last hacked just leave at 0
 Config.FailsToLockdown = 3 -- How many failed hacking attempts will put the cell tower into lockdown and therefore cooldown
+Config.GateUnlockTime = 600 -- How many seconds the gate should stay open after being hacked before shutting again
 Config.CodeLength = 14 -- Length of code obtained from drownloading from the limo
 Config.DialogWait = 3000 -- Time in miliseconds between each message from intro NPC
 Config.PedLocation = vector4(849.5, -2133.55, 29.30, 357.68) -- Location of intro NPC
