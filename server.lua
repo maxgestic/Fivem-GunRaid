@@ -1,13 +1,29 @@
-local heist = false
 local searchers = {}
 local valid_codes = {}
 local isThereSignal = false
 local hackFails = 0
 local TowerHacking = false
 local GateHacking = false
-local hacker, netd1, netv1
+local hacker
 
-RegisterServerEvent('usa_gunraid:BuyFromPed')
+RegisterServerEvent('usa_gunraid:getCodes') -- DEBUG Server Event to get Codes valid
+AddEventHandler('usa_gunraid:getCodes', function()
+
+	local codes = ""
+
+	for i,v in pairs (valid_codes) do
+
+		codes = codes .. v .. " "
+
+	end
+
+	print("Getting Codes" .. codes)
+	
+	TriggerClientEvent('usa_gunraid:printCodes',source,  valid_codes, source)
+
+end)
+
+RegisterServerEvent('usa_gunraid:BuyFromPed') -- Server Event that checks if player has enough cash to get advice and hacking tablet, if so gives tablet
 AddEventHandler('usa_gunraid:BuyFromPed', function()
 
 	-- PLACEHOLDER CHECK IF SOURCE HAS 10000 DOLLARS IN CASH
@@ -24,7 +40,7 @@ AddEventHandler('usa_gunraid:BuyFromPed', function()
 
 end)
 
-RegisterServerEvent('usa_gunraid:hackattempt')
+RegisterServerEvent('usa_gunraid:hackattempt') -- Server Event that gets called when player attempts to hack tower, checks if tower is on cooldown
 AddEventHandler('usa_gunraid:hackattempt', function()
 
 	local cooldown = false
@@ -52,10 +68,9 @@ AddEventHandler('usa_gunraid:hackattempt', function()
 
     end
 
-
 end)
 
-RegisterServerEvent('usa_gunraid:hackstarted')
+RegisterServerEvent('usa_gunraid:hackstarted') -- Server Event that gets called when player starts hacking, used to send 911
 AddEventHandler('usa_gunraid:hackstarted', function()
 	
 	-- PLACEHOLDER SEND 911 TO POLICE
@@ -63,7 +78,7 @@ AddEventHandler('usa_gunraid:hackstarted', function()
 
 end)
 
-RegisterServerEvent('usa_gunraid:hackcomplete')
+RegisterServerEvent('usa_gunraid:hackcomplete') -- Server Event that gets called when player completes cell tower hack
 AddEventHandler('usa_gunraid:hackcomplete', function()
 
 	TowerHacking = false
@@ -76,7 +91,7 @@ AddEventHandler('usa_gunraid:hackcomplete', function()
 
 end)
 
-RegisterServerEvent('usa_gunraid:hackfail')
+RegisterServerEvent('usa_gunraid:hackfail') -- Server Event that gets called when player fails cell tower hack
 AddEventHandler('usa_gunraid:hackfail', function()
 
 	TowerHacking = false
@@ -97,38 +112,21 @@ AddEventHandler('usa_gunraid:hackfail', function()
 
 end)
 
-RegisterServerEvent('usa_gunraid:downloadcomplete')
+RegisterServerEvent('usa_gunraid:downloadcomplete') -- Server Event that gets called when player finishes the downloading of the access codes
 AddEventHandler('usa_gunraid:downloadcomplete', function(code)
 	
 	table.insert(valid_codes, code)
 
 end)
 
-RegisterServerEvent('usa_gunraid:limoarrived')
+RegisterServerEvent('usa_gunraid:limoarrived') -- Server Event that gets called when limo arrives at desitnation
 AddEventHandler('usa_gunraid:limoarrived', function()
 	
 	isThereSignal = false
 
 end)
 
-RegisterServerEvent('usa_gunraid:getCodes')
-AddEventHandler('usa_gunraid:getCodes', function()
-
-	local codes = ""
-
-	for i,v in pairs (valid_codes) do
-
-		codes = codes .. v .. " "
-
-	end
-
-	print("Getting Codes" .. codes)
-	
-	TriggerClientEvent('usa_gunraid:printCodes',source,  valid_codes, source)
-
-end)
-
-RegisterServerEvent('usa_gunraid:inspectpanel')
+RegisterServerEvent('usa_gunraid:inspectpanel') -- Server Event that gets called when a police officer inspects the cell tower
 AddEventHandler('usa_gunraid:inspectpanel', function()
 
 	local cooldown = false
@@ -151,8 +149,7 @@ AddEventHandler('usa_gunraid:inspectpanel', function()
 
 end)
 
-
-RegisterServerEvent('usa_gunraid:hackgate')
+RegisterServerEvent('usa_gunraid:hackgate') -- TODO Server Event that gets called when a payer starts hacking the gate
 AddEventHandler('usa_gunraid:hackgate', function()
 
 	local cooldown = false
@@ -162,7 +159,7 @@ AddEventHandler('usa_gunraid:hackgate', function()
 
 end)
 
-RegisterServerEvent('usa_gunraid:verifycode')
+RegisterServerEvent('usa_gunraid:verifycode') -- Server Event that gets called when player enters a code
 AddEventHandler('usa_gunraid:verifycode', function(password)
 
 	local found = false
@@ -181,14 +178,14 @@ AddEventHandler('usa_gunraid:verifycode', function(password)
 
 end)
 
-RegisterServerEvent('usa_gunraid:openGate')
+RegisterServerEvent('usa_gunraid:openGate') -- TODO Server Event that gets called when the gate opens
 AddEventHandler('usa_gunraid:openGate', function()
 
     TriggerClientEvent('usa_gunraid:RemoveGate', -1)
 
 end)
 
-RegisterServerEvent('usa_gunraid:search')
+RegisterServerEvent('usa_gunraid:search') -- Server Event that gets called when the player searches a crate
 AddEventHandler('usa_gunraid:search', function(search)
 	
 	local source = source
@@ -236,7 +233,7 @@ AddEventHandler('usa_gunraid:search', function(search)
 
 end)
 
-RegisterServerEvent('usa_gunraid:toofar')
+RegisterServerEvent('usa_gunraid:toofar') -- Server Event that gets called when the player moves to far away from a crate while searching
 AddEventHandler('usa_gunraid:toofar', function()
 
 	local source = source
@@ -251,7 +248,7 @@ AddEventHandler('usa_gunraid:toofar', function()
 
 end)
 
-RegisterServerEvent('usa_gunraid:unlockbox')
+RegisterServerEvent('usa_gunraid:unlockbox') -- Server Event that gets called when the player unlocks a lockbox
 AddEventHandler('usa_gunraid:unlockbox', function()
 
 	local source = source
@@ -299,7 +296,7 @@ AddEventHandler('usa_gunraid:unlockbox', function()
 
 end)
 
-RegisterServerEvent('usa_gunraid:lockboxtoofar')
+RegisterServerEvent('usa_gunraid:lockboxtoofar') -- Server Event that gets called when the player moves to far from the unlock spot when unlocking a box
 AddEventHandler('usa_gunraid:lockboxtoofar', function()
 
 	local source = source
