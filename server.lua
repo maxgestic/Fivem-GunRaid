@@ -7,7 +7,7 @@ local limoVehicle
 local hackFails = 0
 local TowerHacking = false
 local GateHacking = false
-local hacker
+local hacker, netd1, netv1
 
 RegisterServerEvent('usa_gunraid:toofar')
 AddEventHandler('usa_gunraid:toofar', function()
@@ -91,6 +91,7 @@ AddEventHandler('usa_gunraid:unlockbox', function()
 			TriggerClientEvent('usa_gunraid:unlocking', source)
 
 			--SEND 911 CALL PLACEHOLDER
+			TriggerClientEvent("usa_gunraid:911placeholder", -1, "911 | Suspicius Person making noise | Great Ocean Highway")
 
 			SetTimeout(Config.TimeToUnlockBox*1000, function()
 
@@ -162,6 +163,7 @@ RegisterServerEvent('usa_gunraid:hackstarted')
 AddEventHandler('usa_gunraid:hackstarted', function()
 	
 	-- PLACEHOLDER SEND 911 TO POLICE
+	TriggerClientEvent("usa_gunraid:911placeholder", -1, "911 | Hacking in Progress | Vinewood Sign")
 
 end)
 
@@ -175,6 +177,8 @@ AddEventHandler('usa_gunraid:hackcomplete', function()
 	hacker = source
 
 	Config.LastHacked = os.time() 
+
+	
 
 end)
 
@@ -196,8 +200,6 @@ AddEventHandler('usa_gunraid:hackfail', function()
 	end
 
 	TriggerClientEvent('usa_gunraid:hackfailReturn', source, locked)
-
-
 
 end)
 
@@ -229,7 +231,7 @@ AddEventHandler('usa_gunraid:getCodes', function()
 
 	print("Getting Codes" .. codes)
 	
-	TriggerClientEvent('usa_gunraid:printCodes',source,  valid_codes)
+	TriggerClientEvent('usa_gunraid:printCodes',source,  valid_codes, source)
 
 end)
 

@@ -8,12 +8,15 @@ local current_crate = ""
 local unlocking = false
 
 local targetsEntity = {}
-local stuffSpawned = false
 local tracker_active = false
 local tracker_shown = false
 
+local tower_hack_count = 0
 local hacking = false
 local hack_shown = false
+local hackerblip
+local hackerTracked = false
+local hacktracktimer = 0
 
 local limoMoving = false
 
@@ -43,7 +46,6 @@ SetEntityHeading(box, 336.06)
 SetEntityAsMissionEntity(box, true, true)
 
 
-
 function spawnGate()
 
     gate_open = false
@@ -58,7 +60,6 @@ function spawnGate()
     SetEntityHeading(gate2, 35.0)
     SetEntityAsMissionEntity(gate2, true, true)
     FreezeEntityPosition(gate2, true)
-
 end
 
 spawnGate()
@@ -138,8 +139,20 @@ function showHelpText(msg)
     EndTextCommandDisplayHelp(0,0,0,-1)
 end
 
+RegisterNetEvent('usa_gunraid:911placeholder')
+AddEventHandler('usa_gunraid:911placeholder', function(msg)
+    
+    if isPolice then
+
+        notify(msg)
+
+    end
+
+end)
+
 RegisterNetEvent('usa_gunraid:notify')
 AddEventHandler('usa_gunraid:notify', function(msg)
+
     notify(msg)
 end)
 
@@ -197,7 +210,7 @@ AddEventHandler('usa_gunraid:unlockfailed', function()
 end)
 
 RegisterNetEvent('usa_gunraid:printCodes')
-AddEventHandler('usa_gunraid:printCodes', function(valid_codes)
+AddEventHandler('usa_gunraid:printCodes', function(valid_codes, id)
 
     local codes = ""
 
@@ -207,7 +220,7 @@ AddEventHandler('usa_gunraid:printCodes', function(valid_codes)
 
     end
 
-    print("Codes:".. codes)
+    print("Hey ".. id .. " Codes:".. codes)
 end)
 
 RegisterNetEvent('usa_gunraid:inspectReturn')
@@ -215,46 +228,34 @@ AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, hacker, cooldown
 
     time = tonumber(string.format("%." .. 0 .. "f", time))
     
+    if DoesBlipExist(hackerblip) then
+        RemoveBlip(hackerblip)
+    end
 
     if cooldown then
     
         if isHacked then
 
-            notify("Tower was hacked " .. time .. " minutes ago and a signal of the hacker has been found!")
+            notify("Tower was hacked " .. time .. " minutes ago and a signal of the hacker has been found! "..hacker)
 
-            hack_src = GetPlayerPed(hacker-1)
+            hack_src = GetPlayerPed(GetPlayerIndex(hacker))
 
             print(hack_src)
 
-            local blip = AddBlipForEntity(hack_src)
-            SetBlipDisplay(blip, 2)
-            SetBlipSprite(blip, 459)
-            SetBlipFlashes(blip, true)
-            SetBlipFlashTimer(blip, 5000)
-            SetBlipColour(blip, 1)
+            hackerblip = AddBlipForEntity(hack_src)
+            SetBlipDisplay(hackerblip, 2)
+            SetBlipSprite(hackerblip, 459)
+            SetBlipFlashes(hackerblip, true)
+            SetBlipFlashTimer(hackerblip, 5000)
+            SetBlipColour(hackerblip, 1)
             BeginTextCommandSetBlipName("STRING")
             AddTextComponentString("Hacked Signal")
-            EndTextCommandSetBlipName(blip)
+            EndTextCommandSetBlipName(hackerblip)
 
-            local trackertime = Config.trackertime
+            hackerTracked = true
+            hacktracktimer = Config.trackertime
 
-            while true do
 
-                Citizen.Wait(1000)
-                if(trackertime > 0)then
-                    trackertime = trackertime - 1
-                end
-
-                if trackertime == 0 then
-
-                    break
-
-                end                
-            end
-
-            alert("Tracker Signal Lost")
-
-            RemoveBlip(blip)
 
         else
 
@@ -471,13 +472,18 @@ RegisterCommand("togglep", function (source, args)
 
 end)
 
+RegisterCommand("deletelimo", function(source, args)
+    DeletePed(d1)
+    DeleteVehicle(v1)
+end)
+
 RegisterCommand("removegate", function (source, args)
 
     TriggerServerEvent("usa_gunraid:openGate")
 
 end)
 
-Citizen.CreateThread(function()
+Citizen.CreateThread(function() -- Search and Break Box Timers
     while true do
         Citizen.Wait(0)
         if searching then
@@ -495,7 +501,7 @@ Citizen.CreateThread(function()
     end
 end)
 
-Citizen.CreateThread(function ()
+Citizen.CreateThread(function () -- Mansion Entrance, Elevator Hack and Crate Search
     while true do
 
         Citizen.Wait(0)
@@ -656,7 +662,7 @@ Citizen.CreateThread(function ()
     end
 end)
 
-Citizen.CreateThread(function ()
+Citizen.CreateThread(function () -- NPC Conversation 
 
     ped = GetHashKey("mp_m_weapexp_01")
     RequestModel(ped)
@@ -728,10 +734,10 @@ Citizen.CreateThread(function ()
 
         end
 
-    end
+    end 
 end)
 
-function start_tracking()
+function start_tracking() -- Fuction to start tracking 
 
     DeletePed(d1)
     DeleteVehicle(v1)
@@ -749,7 +755,6 @@ function start_tracking()
     random = math.random(count)
 
     v1 = CreateVehicle(vhash, Config.LimoSpawnCoords[random], true, false)
-    SetEntityAsMissionEntity(v1, true, true)
     -- v1 = CreateVehicle(vhash, -980.06, -2818.48, 13.65, 149.72, true, false) --DEBUG ONLY
     SetVehicleOnGroundProperly(v1)
 
@@ -758,27 +763,30 @@ function start_tracking()
         Citizen.Wait(1)
     end
 
-    d1 = CreatePedInsideVehicle(v1, 4, dhash, -1, true, 0)
-    SetEntityAsMissionEntity(d1, true, true)
+    d1 = CreatePedInsideVehicle(v1, 4, dhash, -1, true, false)
 
     TaskVehicleDriveToCoordLongrange(d1, v1, Config.LimoDestination, 26.0, 447, 0)
+    SetPedKeepTask(d1, true)
+    SetPedDiesInVehicle(d1, false)
+    SetPedDiesInSinkingVehicle(d1, false)
+    SetPedDiesWhenInjured(d1, false)
+
     limoMoving = true
-    stuffSpawned = true
 
     table.insert(targetsEntity,v1)
     TriggerEvent('mtracker:settargets', targetsEntity)
     notify("Starting Tracker hide and show with HOME")
     TriggerEvent('mtracker:start')
 
-    TriggerServerEvent("usa_gunraid:hackcomplete")
+    TriggerServerEvent("usa_gunraid:hackcomplete", VehToNet(v1), PedToNet(d1))
 
     tracker_active = true
     tracker_shown = true
 
-    secondsRemaining = Config.TimeToDownload
+    secondsRemaining = Config.TimeToDownload 
 end
 
-Citizen.CreateThread(function()
+Citizen.CreateThread(function() -- Limo Tracking & Downloading Thread 
 
     while true do
 
@@ -806,7 +814,7 @@ Citizen.CreateThread(function()
 
             while Vdist2(GetEntityCoords(PlayerPedId(), false), GetEntityCoords(d1, false)) < 450 do
 
-                if IsPedDeadOrDying(d1, 1) or IsPedHurt(d1) or not IsPedInVehicle(d1, v1, true) or not limoMoving then
+                if IsPedDeadOrDying(d1, 1) or not IsPedInVehicle(d1, v1, true) or not limoMoving then
 
                     break
 
@@ -857,7 +865,7 @@ Citizen.CreateThread(function()
 
             end
 
-            if IsPedDeadOrDying(d1, 1) or IsPedHurt(d1) or not IsPedInVehicle(d1, v1, true) then
+            if IsPedDeadOrDying(d1, 1) or not IsPedInVehicle(d1, v1, true) then
 
                     alert("The phone of the target has been destroyed!")
 
@@ -876,7 +884,7 @@ Citizen.CreateThread(function()
     end
 end)
 
-Citizen.CreateThread(function()
+Citizen.CreateThread(function() -- Thread to check if limo arrived 
     while true do
 
         Citizen.Wait(0)
@@ -890,8 +898,6 @@ Citizen.CreateThread(function()
                 limoMoving = false
 
                 alert("The tracker signal has been lost!")
-
-
 
                 DeletePed(d1)
                 DeleteVehicle(v1)
@@ -908,54 +914,71 @@ Citizen.CreateThread(function()
 
         end
 
-    end
+    end 
 end)
 
+Citizen.CreateThread(function() -- Thread to time how long hacker singal gets shown to PD
+    
+    while true do
 
+        Citizen.Wait(0)
 
--- function tower_result(success, timeremaining, finish)
---     if success then
---         hacking = false
---         hack_shown = false
---         print('Success with '..timeremaining..'s remaining.')
---         TriggerEvent('mhacking:hide')
---         start_tracking()
---     else
---         hacking = false
---         hack_shown = false
---         print('Failure')
---         TriggerEvent('mhacking:hide')
---         TriggerServerEvent('usa_gunraid:hackfail')
---     end
--- end
+        while hackerTracked do
 
-function tower_result(success, timeremaining, finish)
+            Citizen.Wait(1000)
+
+            if hacktracktimer > 0 then
+
+                hacktracktimer = hacktracktimer - 1
+
+            else
+
+                RemoveBlip(hackerblip)
+                alert("The Signal of the hacker has been lost!")
+                hackerTracked = false
+
+            end
+
+        end
+
+    end
+
+end)
+
+function tower_result(success, timeremaining, finish) -- Tower Hack Result 
+
+    tower_hack_count = tower_hack_count + 1
+
     if success then
+        
         print('Success with '..timeremaining..'s remaining.')
-    else
-        hacking = false
-        hack_shown = false
-        print('Failure')
-        TriggerEvent('mhacking:hide')
-        TriggerServerEvent('usa_gunraid:hackfail')
     end
 
     if finish and success then
 
+        TriggerEvent('mhacking:hide')
+
         hacking = false
         hack_shown = false
-        print('Success with '..timeremaining..'s remaining.')
-        TriggerEvent('mhacking:hide')
+
         start_tracking()
 
-    end
+        return
 
-    return
+    elseif tower_hack_count == 4 and not success then
+
+        print("Fail")
+
+        TriggerServerEvent('usa_gunraid:hackfail')
+
+        return
+
+    end
 
 end
 
 
-Citizen.CreateThread(function()
+Citizen.CreateThread(function() --Hack & Inspect Tower 
     while true do
         Citizen.Wait(0)
 
@@ -1029,11 +1052,11 @@ Citizen.CreateThread(function()
 
         end
 
-    end
+    end 
 end)
 
 
-function gate_result_new(success, timeremaining, finish)
+function gate_result_new(success, timeremaining, finish) -- Hack Gate Result 
     if success then
         gate_hack_count = gate_hack_count + 1
         print('Success with '..timeremaining..'s remaining. Number of successful hacks: ' .. gate_hack_count)
@@ -1060,7 +1083,7 @@ function gate_result_new(success, timeremaining, finish)
 
 end
 
-Citizen.CreateThread(function()
+Citizen.CreateThread(function() -- Hack Gate 
     while true do
         Citizen.Wait(0)
 
