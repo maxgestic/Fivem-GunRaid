@@ -24,6 +24,8 @@ local hacktracktimer = 0
 local d1, v1
 local gate_open = false
 
+local currentBlips = {}
+
 local isPolice = false -- PLACEHOLDER FOR BEING ON DUTY AS POLICE
 
 
@@ -220,13 +222,38 @@ function start_tracking() -- Fuction to start tracking
     notify("Starting Tracker hide and show with HOME")
     TriggerEvent('mtracker:start')
 
-    TriggerServerEvent("usa_gunraid:hackcomplete", VehToNet(v1), PedToNet(d1))
+    local idval = (GetPlayerPed(-1))
+
+    TriggerServerEvent("usa_gunraid:hackcomplete")
 
     tracker_active = true
     tracker_shown = true
 
     secondsRemaining = Config.TimeToDownload 
 
+end
+
+function RemoveBlips()
+    for i = #currentBlips, 1, -1 do
+        local b = currentBlips[i]
+        if b ~= 0 then
+            RemoveBlip(b)
+            table.remove(currentBlips, i)
+        end
+    end
+end
+
+function RefreshBlips(coords)
+    local blip = AddBlipForCoord(coords.x, coords.y, coords.z)
+    SetBlipDisplay(blip, 2)
+    SetBlipSprite(blip, 459)
+    SetBlipFlashes(blip, true)
+    SetBlipFlashTimer(blip, 5000)
+    SetBlipColour(blip, 1)
+    BeginTextCommandSetBlipName("STRING")
+    AddTextComponentString("Hacked Signal")
+    EndTextCommandSetBlipName(blip)
+    table.insert(currentBlips, blip)
 end
 
 
@@ -417,38 +444,20 @@ AddEventHandler('usa_gunraid:hackfailReturn', function(locked)
 end)
 
 RegisterNetEvent('usa_gunraid:inspectReturn') -- Event when police officer inspects cell tower
-AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, hacker, cooldown, time)
+AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, cooldown, time)
 
     time = tonumber(string.format("%." .. 0 .. "f", time))
-    
-    if DoesBlipExist(hackerblip) then
-        RemoveBlip(hackerblip)
-    end
 
     if cooldown then
     
         if isHacked then
 
-            notify("Tower was hacked " .. time .. " minutes ago and a signal of the hacker has been found! "..hacker)
-
-            hack_src = GetPlayerPed(GetPlayerIndex(hacker))
-
-            print(hack_src)
-
-            hackerblip = AddBlipForEntity(hack_src)
-            SetBlipDisplay(hackerblip, 2)
-            SetBlipSprite(hackerblip, 459)
-            SetBlipFlashes(hackerblip, true)
-            SetBlipFlashTimer(hackerblip, 5000)
-            SetBlipColour(hackerblip, 1)
-            BeginTextCommandSetBlipName("STRING")
-            AddTextComponentString("Hacked Signal")
-            EndTextCommandSetBlipName(hackerblip)
+            notify("Tower was hacked " .. time .. " minutes ago and a signal of the hacker has been found! ")
 
             hackerTracked = true
             hacktracktimer = Config.trackertime
 
-
+            TriggerServerEvent('usa_gunraid:activetracking')
 
         else
 
@@ -464,6 +473,13 @@ AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, hacker, cooldown
 
 end)
 
+RegisterNetEvent("usa_gunraid:updatetracker")
+AddEventHandler("usa_gunraid:updatetracker", function(coords)
+    if hackerTracked then
+        RemoveBlips()
+        RefreshBlips(coords)
+    end
+end)
 
 RegisterNetEvent('usa_gunraid:hackgateReturn') -- Event when player starts hacking the gate controll, checks if is on lockdown
 AddEventHandler('usa_gunraid:hackgateReturn', function(cooldown)
@@ -800,7 +816,7 @@ Citizen.CreateThread(function() -- Limo Tracking & Downloading Thread
 
             while Vdist2(GetEntityCoords(PlayerPedId(), false), GetEntityCoords(d1, false)) < 450 do
 
-                if IsPedDeadOrDying(d1, 1) or not IsPedInVehicle(d1, v1, true) or not limoMoving then
+                if  not IsPedInVehicle(d1, v1, true) or not limoMoving then
 
                     break
 
@@ -851,7 +867,7 @@ Citizen.CreateThread(function() -- Limo Tracking & Downloading Thread
 
             end
 
-            if IsPedDeadOrDying(d1, 1) or not IsPedInVehicle(d1, v1, true) then
+            if not IsPedInVehicle(d1, v1, true) then
 
                     alert("The phone of the target has been destroyed!")
 

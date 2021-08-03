@@ -6,6 +6,7 @@ local TowerHacking = false
 local GateHacking = false
 local gateOpen = false
 local hacker
+local interval = 0.5
 
 RegisterServerEvent('usa_gunraid:getCodes') -- DEBUG Server Event to get Codes valid
 AddEventHandler('usa_gunraid:getCodes', function()
@@ -86,7 +87,11 @@ AddEventHandler('usa_gunraid:hackcomplete', function()
 	
 	isThereSignal = true
 
-	hacker = source
+	hacker = GetPlayerPed(source)
+
+	print(hacker)
+
+	print(GetEntityCoords(hacker))
 
 	Config.LastHacked = os.time() 
 
@@ -146,7 +151,28 @@ AddEventHandler('usa_gunraid:inspectpanel', function()
     time = (os.time() - lasthack) / 60
     
 	
-	TriggerClientEvent('usa_gunraid:inspectReturn', source, isThereSignal, hacker, cooldown, time)
+	TriggerClientEvent('usa_gunraid:inspectReturn', source, isThereSignal, cooldown, time)
+
+end)
+
+RegisterServerEvent('usa_gunraid:activetracking') -- 
+AddEventHandler('usa_gunraid:activetracking', function()
+
+	local src = source
+
+	local lastUpdateTime = os.time()
+	while true do
+
+		if os.difftime(os.time(), lastUpdateTime) >= interval then
+			
+			local coords = GetEntityCoords(hacker)
+
+			TriggerClientEvent("usa_gunraid:updatetracker", src, coords)
+			
+			lastUpdateTime = os.time()
+		end
+		Wait(500)
+	end
 
 end)
 
