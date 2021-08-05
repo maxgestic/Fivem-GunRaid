@@ -21,8 +21,32 @@ Config.DialogWait = 3000 -- Time in miliseconds between each message from intro 
 Config.PedLocation = vector4(849.5, -2133.55, 29.30, 357.68) -- Location of intro NPC
 Config.LimoSpawnCoords = {vector4(1361.31, 1171.18, 112.21, 180), vector4(1695.94, 3280.73, 40.27, 216.11), vector4(-732.66, 5813.98, 17.40, 205.45)} -- Array of possible spawn locations for the limo
 Config.LimoDestination = vector3(-1082.01, -2869.85, 13.11) -- Location of destination where limo will drive to
-Config.NPCSpawns = {vector4(5014.15, -5754.52, 24.27, 147.40), vector4(4994.32, -5759.86, 19.88, 264.29), vector4(4998.13, -5761.56, 19.88, 324.29), vector4(5007.09, -5739.62, 19.88, 151.56), vector4(5022.07, -5749.72, 19.88, 116.27), vector4(5017.24, -5757.53, 19.88, 223.42), vector4(4989.49, -5755.32, 19.88, 248.10), vector4(4989.91, -5722.54, 19.88, 167.50), vector4(4998.89, -5717.44, 19.87, 162.18), vector4(4985.64, -5718.61, 25.23, 238.17), vector4(4984.33, -5707.53, 19.87, 56.31), vector4(4978.97, -5712.79, 19.88, 36.34), vector4(4985.64, -5714.02, 19.88, 225.05)}
-Config.NPCWeapons = {"weapon_machete", "weapon_snspistol", "weapon_revolver", "weapon_microsmg", "weapon_dbshotgun", "weapon_assaultrifle", "weapon_carbinerifle"}
+Config.NPCSpawns = {
+	vector4(5030.01, -5706.64, 19.87, 125.02),
+	vector4(5037.92, -5766.01, 15.67, 344.56),
+	vector4(5028.39, -5790.13, 17.67, 38.39),
+	vector4(5015.47, -5783.04, 17.67, 237.89),
+	vector4(5031.44, -5749.14, 16.27, 63.10),
+	vector4(5018.54, -5716.96, 20.07, 225.82),
+	vector4(5030.83, -5722.51, 17.67, 151.09),
+	vector4(5018.89, -5748.53, 24.27, 238.26),
+	vector4(4972.73, -5748.62, 19.88, 240.43),
+	vector4(4974.08, -5733.85, 19.88, 145.14),
+	vector4(5014.15, -5754.52, 24.27, 147.40),
+	vector4(4994.32, -5759.86, 19.88, 264.29),
+	vector4(4998.13, -5761.56, 19.88, 324.29),
+	vector4(5007.09, -5739.62, 19.88, 151.56),
+	vector4(5022.07, -5749.72, 19.88, 116.27),
+	vector4(5017.24, -5757.53, 19.88, 223.42),
+	vector4(4989.49, -5755.32, 19.88, 248.10),
+	vector4(4989.91, -5722.54, 19.88, 167.50),
+	vector4(4998.89, -5717.44, 19.87, 162.18),
+	vector4(4985.64, -5718.61, 25.23, 238.17),
+	vector4(4984.33, -5707.53, 19.87, 56.31),
+	vector4(4978.97, -5712.79, 19.88, 36.34),
+	vector4(4985.64, -5714.02, 19.88, 225.05)
+}
+Config.NPCWeapons = {"weapon_machete", "weapon_snspistol", "WEAPON_GADGETPISTOL", "weapon_revolver", "weapon_microsmg", "weapon_dbshotgun", "weapon_assaultrifle", "weapon_carbinerifle"}
 
 crates = { -- Array of Crates in mansion
 	["crate_1"] = {

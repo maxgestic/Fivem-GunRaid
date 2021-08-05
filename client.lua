@@ -13,6 +13,7 @@ local limoMoving = false
 
 local tower_hack_count = 0
 local gate_hack_count = 0
+local elevator_hack_count = 0
 
 local hacking = false
 local hack_shown = false
@@ -27,6 +28,8 @@ local gate_open = false
 local currentBlips = {}
 
 local guardPeds = {}
+
+local pedNets = {}
 
 local isPolice = false -- PLACEHOLDER FOR BEING ON DUTY AS POLICE
 
@@ -198,15 +201,13 @@ function gate_result_new(success, timeremaining, finish) -- Hack Gate Result
 
 end
 
-function elevator_result(success, timeremaining, finish) -- Hack Gate Result 
+function elevator_result(success, timeremaining, finish) -- Elevator Gate Result 
 
-    if success then
-        -- print('Success with '..timeremaining..'s remaining.')
-    else
-        
-        -- print('Failure')
-        -- TriggerServerEvent('usa_gunraid:hackfail')
-    end
+    elevator_hack_count = elevator_hack_count + 1
+
+    -- if success then
+    --     print('Success with '..timeremaining..'s remaining.')
+    -- end
 
     if finish and success then
 
@@ -216,6 +217,16 @@ function elevator_result(success, timeremaining, finish) -- Hack Gate Result
         hack_shown = false
 
         TriggerServerEvent("usa_gunraid:elevatorHacked")
+
+    elseif elevator_hack_count == 4 and not success then
+
+        elevator_hack_count = 0
+
+        -- print("Fail")
+
+        TriggerServerEvent('usa_gunraid:elevatorhackfail')
+
+        return
 
     end
 
@@ -639,7 +650,7 @@ AddEventHandler('usa_gunraid:spawnPeds', function()
     
     for k,v in pairs(Config.NPCSpawns) do
         
-        table.insert(guardPeds, CreatePed(4, ped, v.x, v.y, v.z, v.w, true, false))
+        table.insert(guardPeds, CreatePed(4, ped, v.x, v.y, v.z, v.w, true, true))
 
     end
 
@@ -659,8 +670,15 @@ AddEventHandler('usa_gunraid:spawnPeds', function()
         SetPedCombatRange(v, 1)
         SetPedSeeingRange(v, 30.00)
         SetPedHearingRange(v, 80.00)
+        SetPedDropsWeaponsWhenDead(v, false)
+
+        pedNets[k] = PedToNet(v)
 
     end
+
+    TriggerServerEvent('usa_gunraid:getNetIDs', pedNets)
+
+    pedNets = {}
 
 end)
 
@@ -670,6 +688,8 @@ AddEventHandler('usa_gunraid:deletePeds', function()
     for k,v in pairs(guardPeds) do
         DeletePed(v)
     end
+
+    guardPeds = {}
 
 end)
 
@@ -684,7 +704,7 @@ end)
 
 RegisterCommand("deletePeds", function(source, args)
 
-    TriggerEvent("usa_gunraid:deletePeds")
+    TriggerServerEvent("usa_gunraid:deletePeds")
 
 end)
 

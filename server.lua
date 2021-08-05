@@ -12,6 +12,7 @@ local isElevatorHacked = false
 local elevatorHacking = false
 local pedsSpawned = false
 local playersInRaid = {}
+local pedNets = {}
 
 local function has_value (tab, val)
     for index, value in ipairs(tab) do
@@ -393,7 +394,7 @@ end)
 RegisterServerEvent('usa_gunraid:checkelevator') -- TODO Server Event that gets called when a payer starts hacking the elevator
 AddEventHandler('usa_gunraid:checkelevator', function()
 
-    TriggerClientEvent('usa_gunraid:checkelevatorReturn', source, isElevatorHacked)
+	TriggerClientEvent('usa_gunraid:checkelevatorReturn', source, isElevatorHacked)
 
 end)
 
@@ -412,6 +413,17 @@ AddEventHandler('usa_gunraid:elevatorHacked', function()
     	-- print("elevator not hacked anymore")
 
     end)
+
+end)
+
+RegisterServerEvent('usa_gunraid:elevatorhackfail') -- Server Event that gets called when player fails elevator hack
+AddEventHandler('usa_gunraid:elevatorhackfail', function()
+
+	print("Setting elevator hack to false")
+
+	elevatorHacking = false
+
+	TriggerClientEvent('usa_gunraid:elevatorhackfailReturn', source)
 
 end)
 
@@ -478,6 +490,10 @@ AddEventHandler('usa_gunraid:spawnPedsServer', function()
 
 	if not pedsSpawned then
 
+		for k,v in pairs(playersInRaid) do
+			print(k,v)
+		end
+
 		pedsSpawned = true
 
 		TriggerClientEvent('usa_gunraid:spawnPeds', source)
@@ -512,17 +528,22 @@ AddEventHandler('usa_gunraid:spawnPedsServer', function()
 				distanceFromRaid[k] = d1
 			end
 
-			if has_value(distanceFromRaid, true) then 
+			if not has_value(distanceFromRaid, false) then 
 
 				playersInArea = false
 
-				-- print("all players gone")
+				for k,v in pairs(pedNets) do
+				    local ent = NetworkGetEntityFromNetworkId(v)
+				    -- print(ent)
+				    DeleteEntity(ent)
+				end
 
-				TriggerClientEvent("usa_gunraid:deletePeds", source)
-
-				playersInRaid = {}
+				TriggerClientEvent('usa_gunraid:deletePeds', -1)
+				pedNets = {}
 
 				pedsSpawned = false
+
+				playersInRaid = {}
 
 				Config.GateLastHacked = os.time()
 
@@ -531,5 +552,37 @@ AddEventHandler('usa_gunraid:spawnPedsServer', function()
 		end
 
 	end
+
+end)
+
+RegisterServerEvent('usa_gunraid:getNetIDs') -- Server Event that gets called when the player goes up the elevator and spawns peds
+AddEventHandler('usa_gunraid:getNetIDs', function(val)
+
+	-- print("get net id")
+
+	for k,v in pairs(val) do
+		table.insert(pedNets, v)
+		-- print(v)
+	end
+
+end)
+
+RegisterServerEvent('usa_gunraid:deletePeds') -- Server Event that gets called when the player goes up the elevator and spawns peds
+AddEventHandler('usa_gunraid:deletePeds', function(val)
+
+	-- print("deletiong peds")
+
+	for k,v in pairs(pedNets) do
+	    local ent = NetworkGetEntityFromNetworkId(v)
+	    -- print(ent)
+	    DeleteEntity(ent)
+	end
+
+	TriggerClientEvent('usa_gunraid:deletePeds', -1)
+	pedNets = {}
+
+	pedsSpawned = false
+
+	playersInRaid = {}
 
 end)
