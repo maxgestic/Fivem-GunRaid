@@ -575,6 +575,7 @@ end)
 RegisterNetEvent('usa_gunraid:hackgateReturn') -- Event when player starts hacking the gate controll, checks if is on lockdown
 AddEventHandler('usa_gunraid:hackgateReturn', function(cooldown)
 
+    SetBlipDisplay(box_blip, 0)
 
     if cooldown then
 
