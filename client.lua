@@ -37,6 +37,7 @@ function spawn_gate() -- function to spawn gate
     gate = CreateObject(gate_prop, 5043.00, -5814.24, -12.15, false, true, true)
     SetEntityHeading(gate, 35.0)
     SetEntityAsMissionEntity(gate, true, true)
+    FreezeEntityPosition(gate2, true)
 
     local gate2_prop = GetHashKey("prop_fnclink_03gate2")
     gate2 = CreateObject(gate2_prop, 5040.43, -5815.97, -12.30, false, true, true)
@@ -126,12 +127,14 @@ function tower_result(success, timeremaining, finish) -- Tower Hack Result
 
     tower_hack_count = tower_hack_count + 1
 
-    if success then
+    -- if success then
         
-        print('Success with '..timeremaining..'s remaining.')
-    end
+    --     print('Success with '..timeremaining..'s remaining.')
+    -- end
 
     if finish and success then
+
+        tower_hack_count = 0
 
         TriggerEvent('mhacking:hide')
 
@@ -144,7 +147,9 @@ function tower_result(success, timeremaining, finish) -- Tower Hack Result
 
     elseif tower_hack_count == 4 and not success then
 
-        print("Fail")
+        tower_hack_count = 0
+
+        -- print("Fail")
 
         TriggerServerEvent('usa_gunraid:hackfail')
 
@@ -155,12 +160,49 @@ function tower_result(success, timeremaining, finish) -- Tower Hack Result
 end
 
 function gate_result_new(success, timeremaining, finish) -- Hack Gate Result 
+    
+    gate_hack_count = gate_hack_count + 1
+
+    -- if success then
+    --     print('Success with '..timeremaining..'s remaining. Number of successful hacks: ' .. gate_hack_count)
+    -- end
+
+    if finish and success then
+
+        gate_hack_count = 0
+
+        TriggerEvent('mhacking:hide')
+
+        hacking = false
+        hack_shown = false
+
+        local password = KeyboardInput("Enter Verification Access Code:", "", Config.CodeLength)
+
+        TriggerServerEvent("usa_gunraid:verifycode", password)
+
+    elseif gate_hack_count == 4 and not success then
+
+        gate_hack_count = 0
+
+        -- print("Fail")
+
+        TriggerServerEvent('usa_gunraid:gatehackfail')
+
+        return
+
+    end
+
+    return
+
+end
+
+function elevator_result(success, timeremaining, finish) -- Hack Gate Result 
+
     if success then
-        gate_hack_count = gate_hack_count + 1
-        print('Success with '..timeremaining..'s remaining. Number of successful hacks: ' .. gate_hack_count)
+        -- print('Success with '..timeremaining..'s remaining.')
     else
         
-        print('Failure')
+        -- print('Failure')
         -- TriggerServerEvent('usa_gunraid:hackfail')
     end
 
@@ -171,9 +213,7 @@ function gate_result_new(success, timeremaining, finish) -- Hack Gate Result
         hacking = false
         hack_shown = false
 
-        local password = KeyboardInput("Enter Verification Access Code:", "", Config.CodeLength)
-
-        TriggerServerEvent("usa_gunraid:verifycode", password)
+        TriggerServerEvent("usa_gunraid:elevatorHacked")
 
     end
 
@@ -355,12 +395,47 @@ AddEventHandler('usa_gunraid:currentlysearching', function(search)
 end)
 
 RegisterNetEvent('usa_gunraid:searchcomplete') -- Event when player finished search of a crate
-AddEventHandler('usa_gunraid:searchcomplete', function()
+AddEventHandler('usa_gunraid:searchcomplete', function(search)
     ClearPedTasks(GetPlayerPed(-1))
     searching = false
     notify("You found a lockbox of some kind!")
     current_crate = ""
     secondsRemaining = 0
+
+end)
+
+RegisterNetEvent('usa_gunraid:hackelevatorReturn') -- Event when player starts hacking the elevator
+AddEventHandler('usa_gunraid:hackelevatorReturn', function()
+
+        hacking = true
+        hack_shown = true
+
+        TriggerEvent("mhacking:show")
+        TriggerEvent("mhacking:seqstart",{7,6,5,4},60,elevator_result)
+
+end)
+
+RegisterNetEvent('usa_gunraid:checkelevatorReturn') -- Event when player checks the elevator
+AddEventHandler('usa_gunraid:checkelevatorReturn', function(check)
+
+    if check then
+
+        DoScreenFadeOut(1000)
+
+        Citizen.Wait(1000)
+
+        SetEntityCoords(PlayerPedId(), Config.ElevatorLocation.x, Config.ElevatorLocation.y, Config.ElevatorLocation.z, true, true, true, false)
+        SetEntityHeading(PlayerPedId(), Config.ElevatorLocation.w)
+
+        Citizen.Wait(1000)
+
+        DoScreenFadeIn(1000)
+
+    else
+
+        alert("Elevator Panel is locked, you'll hack to hack it!")
+
+    end
 
 end)
 
@@ -393,7 +468,8 @@ AddEventHandler('usa_gunraid:unlockcomplete', function()
 end)
 
 RegisterNetEvent('usa_gunraid:toofarclient') -- Event if player moves to far away from point while searching or unlocking
-AddEventHandler('usa_gunraid:toofarclient', function()
+AddEventHandler('usa_gunraid:toofarclient', function(search)
+
     searching = false
     unlocking = false
     notify("You moved too far away!")
@@ -437,7 +513,7 @@ AddEventHandler('usa_gunraid:hackfailReturn', function(locked)
 
     if locked then
 
-        alert("The tower has gone into lockdown mode due to 5 failed hacking attempts!")
+        alert("The tower has gone into lockdown mode due to ".. Config.FailsToLockdown .." failed hacking attempts!")
 
     end
     
@@ -491,19 +567,25 @@ AddEventHandler('usa_gunraid:hackgateReturn', function(cooldown)
 
     else
 
-
-
         hacking = true
         hack_shown = true
-
         TriggerEvent("mhacking:show")
-        -- TriggerEvent("mhacking:start",7,30,gate_result)
-        TriggerEvent("mhacking:seqstart",{7,6,5,4},60,gate_result_new)
-        -- TriggerServerEvent("usa_gunraid:hackstarted")
-
+        --TriggerEvent("mhacking:seqstart",{7,6,5,4},60,gate_result_new)
+        TriggerEvent("mhacking:seqstart",{7,7,7,7},60,gate_result_new)
 
     end
 
+end)
+
+RegisterNetEvent('usa_gunraid:gatehackfailReturn') -- Event when player fails a hack, checks if gate is now in lockdown mode and if so lets player know
+AddEventHandler('usa_gunraid:gatehackfailReturn', function(locked)
+
+    if locked then
+
+        alert("The gate control box has gone into lockdown mode due to ".. Config.GateFailsToLockdown .." failed hacking attempts!")
+
+    end
+    
 end)
 
 RegisterNetEvent('usa_gunraid:verifycodeReturn') -- Event that opens gate if the entered code is valid
@@ -614,7 +696,7 @@ end)
 -- END OF DEBUG COMMANDS --
 
 
-Citizen.CreateThread(function() --innit thread to spawn props
+Citizen.CreateThread(function() -- innit thread to spawn props
 
     local box_blip = AddBlipForCoord(4968.76, -5796.05, 19.9)
     SetBlipSprite(box_blip, 186)
@@ -986,11 +1068,8 @@ Citizen.CreateThread(function() -- Hack Gate
 
                         if Vdist2(GetEntityCoords(PlayerPedId(), false), 4968.55, -5796.31, 20.9) < 10 then
 
-                            local password = KeyboardInput("Enter Verification Access Code:", "", Config.CodeLength)
 
-                            TriggerServerEvent("usa_gunraid:verifycode", password)
-
-                            --TriggerServerEvent('usa_gunraid:hackgate')
+                            TriggerServerEvent('usa_gunraid:hackgate')
                             
 
                         else
@@ -1056,24 +1135,16 @@ Citizen.CreateThread(function() -- Mansion Entrance, Elevator Hack and Crate Sea
 
         if Vdist2(GetEntityCoords(PlayerPedId(), false), Config.ElevatorPanelLocation) < 8 then
 
-            Draw3DText(Config.ElevatorPanelLocation.x, Config.ElevatorPanelLocation.y, Config.ElevatorPanelLocation.z, 0.2,  "Hack Elevator (E)", 0)
+            Draw3DText(Config.ElevatorPanelLocation.x, Config.ElevatorPanelLocation.y, Config.ElevatorPanelLocation.z, 0.2,  "Hack Elevator (K)", 0)
+            Draw3DText(Config.ElevatorPanelLocation.x, Config.ElevatorPanelLocation.y, Config.ElevatorPanelLocation.z-0.05, 0.2,  "Use Elevator (E)", 0)
 
-            if IsControlJustReleased(1, 38) then
+            if IsControlJustReleased(1, 311) then
 
                 if Vdist2(GetEntityCoords(PlayerPedId(), false), Config.ElevatorPanelLocation) < 2 then
 
                 -- start elevator hack
 
-                    DoScreenFadeOut(1000)
-
-                    Citizen.Wait(1000)
-
-                    SetEntityCoords(PlayerPedId(), Config.ElevatorLocation.x, Config.ElevatorLocation.y, Config.ElevatorLocation.z, true, true, true, false)
-                    SetEntityHeading(PlayerPedId(), Config.ElevatorLocation.w)
-
-                    Citizen.Wait(1000)
-
-                    DoScreenFadeIn(1000)
+                    TriggerServerEvent('usa_gunraid:hackelevator')
 
                 else
 
@@ -1081,7 +1152,19 @@ Citizen.CreateThread(function() -- Mansion Entrance, Elevator Hack and Crate Sea
 
                 end
 
+            elseif IsControlJustReleased(1, 38) then
 
+                if Vdist2(GetEntityCoords(PlayerPedId(), false), Config.ElevatorPanelLocation) < 2 then
+
+                -- check if elevator is hacked
+
+                TriggerServerEvent("usa_gunraid:checkelevator")
+
+                else
+
+                    notify("You are not in the elevator!")
+
+                end
 
             end
 
@@ -1130,7 +1213,7 @@ Citizen.CreateThread(function() -- Mansion Entrance, Elevator Hack and Crate Sea
 
             if (Vdist2(GetEntityCoords(PlayerPedId(), false), crate_pos.x, crate_pos.y, crate_pos.z) > 4) then
 
-                TriggerServerEvent('usa_gunraid:toofar')
+                TriggerServerEvent('usa_gunraid:toofar', current_crate)
 
             end
 

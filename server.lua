@@ -2,11 +2,14 @@ local searchers = {}
 local valid_codes = {}
 local isThereSignal = false
 local hackFails = 0
+local gatehackFails = 0
 local TowerHacking = false
 local GateHacking = false
 local gateOpen = false
 local hacker
 local interval = 0.5
+local isElevatorHacked = false
+local elevatorHacking = false
 
 RegisterServerEvent('usa_gunraid:getCodes') -- DEBUG Server Event to get Codes valid
 AddEventHandler('usa_gunraid:getCodes', function()
@@ -19,7 +22,7 @@ AddEventHandler('usa_gunraid:getCodes', function()
 
 	end
 
-	print("Getting Codes" .. codes)
+	-- print("Getting Codes" .. codes)
 	
 	TriggerClientEvent('usa_gunraid:printCodes',source,  valid_codes, source)
 
@@ -89,10 +92,6 @@ AddEventHandler('usa_gunraid:hackcomplete', function()
 
 	hacker = GetPlayerPed(source)
 
-	print(hacker)
-
-	print(GetEntityCoords(hacker))
-
 	Config.LastHacked = os.time() 
 
 end)
@@ -105,10 +104,11 @@ AddEventHandler('usa_gunraid:hackfail', function()
 	hackFails = hackFails + 1
 	local locked = false
 
-	print("Failed Hacks: "..hackFails)
+	-- print("Failed Hacks: "..hackFails)
 
 	if (hackFails >= Config.FailsToLockdown) then
 
+		hackFails = 0
 		Config.LastHacked = os.time()
 		locked = true
 
@@ -179,10 +179,53 @@ end)
 RegisterServerEvent('usa_gunraid:hackgate') -- TODO Server Event that gets called when a payer starts hacking the gate
 AddEventHandler('usa_gunraid:hackgate', function()
 
-	local cooldown = false
-	local lasthack = Config.LastHacked
+    local cooldown = false
+	local lasthack = Config.GateLastHacked
 
-    TriggerClientEvent('usa_gunraid:hackgateReturn', source, cooldown)
+	if not GateHacking then
+
+		if (os.time() - lasthack) < Config.GateCooldown and lasthack ~= 0 then
+
+        	cooldown = true
+
+	    else
+
+	        cooldown = false
+	        GateHacking = true
+
+	    end
+
+	    TriggerClientEvent('usa_gunraid:hackgateReturn', source, cooldown)
+
+	else
+
+		TriggerClientEvent('usa_gunraid:notify', source, "Someone is already hacking the gate control!")
+
+	end
+
+end)
+
+RegisterServerEvent('usa_gunraid:gatehackfail') -- Server Event that gets called when player fails gate hack
+AddEventHandler('usa_gunraid:gatehackfail', function()
+
+	print("Setting gate hack to false")
+
+	GateHacking = false
+
+	gatehackFails = gatehackFails + 1
+	local locked = false
+
+	-- print("Failed Hacks: "..gatehackFails)
+
+	if (gatehackFails >= Config.GateFailsToLockdown) then
+
+		gatehackFails = 0
+		Config.GateLastHacked = os.time()
+		locked = true
+
+	end
+
+	TriggerClientEvent('usa_gunraid:gatehackfailReturn', source, locked)
 
 end)
 
@@ -201,6 +244,8 @@ AddEventHandler('usa_gunraid:verifycode', function(password)
 
 	end
 
+	GateHacking = false
+
     TriggerClientEvent('usa_gunraid:verifycodeReturn', source, found)
 
 end)
@@ -210,6 +255,8 @@ AddEventHandler('usa_gunraid:openGate', function()
 
     gateOpen = true
 
+    Config.GateLastHacked = os.time()
+
     TriggerClientEvent('usa_gunraid:RemoveGate', -1)
 
     SetTimeout(Config.GateUnlockTime * 1000, function ()
@@ -218,7 +265,7 @@ AddEventHandler('usa_gunraid:openGate', function()
     	
     	TriggerClientEvent('usa_gunraid:SpawnGate', -1)
 
-    	print("gate closed")
+    	-- print("gate closed")
 
     end)
 
@@ -238,23 +285,43 @@ AddEventHandler('usa_gunraid:search', function(search)
 
 		if crate.searching == false then 
 
-			crate.searching = true 
+			crate.searching = true
 
-			TriggerClientEvent('usa_gunraid:notify', source, "Starting to search Crate! ("..crate.name..")")
+			local letters = "abcdefghijklmnopqrstuvwxyz"
+            local numbers = "0123456789"
+            local characterSet = letters .. numbers
+
+            local keyL = Config.CodeLength 
+            local key = ""
+
+            for i = 1, keyL do 
+
+                local rand = math.random(#characterSet)
+                key = key .. string.sub(characterSet, rand, rand)
+
+            end
+
+
+
+			local keySaved = key
+			searchers[source] = key
+
+			-- print(key)
+
+			TriggerClientEvent('usa_gunraid:notify', source, "Starting to search Crate!")
 			TriggerClientEvent('usa_gunraid:currentlysearching', source, search)
-
-			searchers[source] = search
-			local savedSource = source
 
 			SetTimeout(Config.TimeToSearch*1000, function()
 
-				if (searchers[savedSource]) then
+				-- print((searchers[source]).. ", " keySaved)
+
+				if (searchers[source]) == keySaved then
 				
 					crate.searching = false
 
 					crate.lastsearched = os.time()
 
-					TriggerClientEvent('usa_gunraid:searchcomplete', source)
+					TriggerClientEvent('usa_gunraid:searchcomplete', source,  crate.name)
 
 					--ADD LOCKBOX TO SOURCE INVENTORY PLACEHOLDER
 
@@ -273,17 +340,59 @@ AddEventHandler('usa_gunraid:search', function(search)
 end)
 
 RegisterServerEvent('usa_gunraid:toofar') -- Server Event that gets called when the player moves to far away from a crate while searching
-AddEventHandler('usa_gunraid:toofar', function()
+AddEventHandler('usa_gunraid:toofar', function(search)
 
 	local source = source
+	local crate = crates[search]
 	crate.searching = false
 
 	if searchers[source] then
 
-		TriggerClientEvent('usa_gunraid:toofarclient', source)
+		TriggerClientEvent('usa_gunraid:toofarclient', source, crate.name)
 		searchers[source] = nil
 
 	end
+
+end)
+
+RegisterServerEvent('usa_gunraid:hackelevator') -- TODO Server Event that gets called when a payer starts hacking the elevator
+AddEventHandler('usa_gunraid:hackelevator', function()
+
+	if not elevatorHacking then
+
+		elevatorHacking = true
+    	TriggerClientEvent('usa_gunraid:hackelevatorReturn', source)
+
+    else
+
+    	TriggerClientEvent('usa_gunraid:notify', source, "Someone is already hacking the elevator!")
+
+    end
+
+end)
+
+RegisterServerEvent('usa_gunraid:checkelevator') -- TODO Server Event that gets called when a payer starts hacking the elevator
+AddEventHandler('usa_gunraid:checkelevator', function()
+
+    TriggerClientEvent('usa_gunraid:checkelevatorReturn', source, isElevatorHacked)
+
+end)
+
+RegisterServerEvent('usa_gunraid:elevatorHacked') -- TODO Server Event that gets called when a hacks the elevator sucessfully
+AddEventHandler('usa_gunraid:elevatorHacked', function()
+
+    isElevatorHacked = true
+    elevatorHacking = false
+
+    TriggerClientEvent("usa_gunraid:notify", source, "Elevator has been hacked, it will be open for the next 5 minutes!")
+
+    SetTimeout(300000, function ()
+
+    	isElevatorHacked = false
+
+    	-- print("elevator not hacked anymore")
+
+    end)
 
 end)
 
