@@ -26,6 +26,8 @@ local gate_open = false
 
 local currentBlips = {}
 
+local guardPeds = {}
+
 local isPolice = false -- PLACEHOLDER FOR BEING ON DUTY AS POLICE
 
 
@@ -420,6 +422,8 @@ AddEventHandler('usa_gunraid:checkelevatorReturn', function(check)
 
     if check then
 
+        TriggerServerEvent("usa_gunraid:spawnPedsServer")
+
         DoScreenFadeOut(1000)
 
         Citizen.Wait(1000)
@@ -563,7 +567,7 @@ AddEventHandler('usa_gunraid:hackgateReturn', function(cooldown)
 
     if cooldown then
 
-        notify("Gate controll system locked down due to recent hack!")
+        notify("Gate controll system locked down due to recent securty breach!")
 
     else
 
@@ -622,7 +626,69 @@ AddEventHandler('usa_gunraid:SpawnGate', function()
 
 end)
 
+RegisterNetEvent('usa_gunraid:spawnPeds') -- Event to spawn hostile peds
+AddEventHandler('usa_gunraid:spawnPeds', function()
+
+    local ped = GetHashKey("g_m_m_cartelguards_01")
+    RequestModel(ped)
+    while not HasModelLoaded(ped) do
+
+        Citizen.Wait(1)
+
+    end
+    
+    for k,v in pairs(Config.NPCSpawns) do
+        
+        table.insert(guardPeds, CreatePed(4, ped, v.x, v.y, v.z, v.w, true, false))
+
+    end
+
+    for k,v in pairs(guardPeds) do
+
+        SetEntityAsMissionEntity(v, true, true)
+        SetPedRelationshipGroupHash(v, 0x84DCFAAD)
+        local randomWep = math.random(1, #Config.NPCWeapons)
+        GiveWeaponToPed(v, GetHashKey(Config.NPCWeapons[randomWep]), 9999, true, true)
+        print("gave weapon ".. randomWep)
+        SetPedAccuracy(v, 30)
+        SetPedAsEnemy(v, true)
+        SetPedFleeAttributes(v, 0, 0)
+        SetPedCombatAttributes(v, 16, 1)
+        SetPedCombatAttributes(v, 46, true)
+        SetPedCombatMovement(v, 1)
+        SetPedCombatRange(v, 1)
+        SetPedSeeingRange(v, 30.00)
+        SetPedHearingRange(v, 80.00)
+
+    end
+
+end)
+
+RegisterNetEvent('usa_gunraid:deletePeds') -- Event to delete hostile peds
+AddEventHandler('usa_gunraid:deletePeds', function()
+
+    for k,v in pairs(guardPeds) do
+        DeletePed(v)
+    end
+
+end)
+
 -- DEBUG COMMANDS --
+RegisterCommand("spawnPeds", function(source, args)
+
+    TriggerServerEvent('usa_gunraid:addPlayerToRaid')
+
+    TriggerServerEvent("usa_gunraid:spawnPedsServer")
+
+end)
+
+RegisterCommand("deletePeds", function(source, args)
+
+    TriggerEvent("usa_gunraid:deletePeds")
+
+end)
+
+
 RegisterCommand("newcode", function (source, args)
     
     local letters = "abcdefghijklmnopqrstuvwxyz"
@@ -698,7 +764,7 @@ end)
 
 Citizen.CreateThread(function() -- innit thread to spawn props
 
-    local box_blip = AddBlipForCoord(4968.76, -5796.05, 19.9)
+    box_blip = AddBlipForCoord(4968.76, -5796.05, 19.9)
     SetBlipSprite(box_blip, 186)
     SetBlipColour(box_blip, 1)
     SetBlipDisplay(box_blip, 0)
@@ -718,7 +784,7 @@ end)
 
 Citizen.CreateThread(function() -- NPC Conversation 
 
-    ped = GetHashKey("mp_m_weapexp_01")
+    local ped = GetHashKey("mp_m_weapexp_01")
     RequestModel(ped)
     while not HasModelLoaded(ped) do
 
@@ -1107,6 +1173,8 @@ Citizen.CreateThread(function() -- Mansion Entrance, Elevator Hack and Crate Sea
                 if Vdist2(GetEntityCoords(PlayerPedId(), false), entry_coors) < 20 then
 
                 --teleport to mansion
+
+                    TriggerServerEvent('usa_gunraid:addPlayerToRaid')
 
                     alert("Entering Mansion Basement!")
 

@@ -10,6 +10,18 @@ local hacker
 local interval = 0.5
 local isElevatorHacked = false
 local elevatorHacking = false
+local pedsSpawned = false
+local playersInRaid = {}
+
+local function has_value (tab, val)
+    for index, value in ipairs(tab) do
+        if value == val then
+            return true
+        end
+    end
+
+    return false
+end
 
 RegisterServerEvent('usa_gunraid:getCodes') -- DEBUG Server Event to get Codes valid
 AddEventHandler('usa_gunraid:getCodes', function()
@@ -271,6 +283,13 @@ AddEventHandler('usa_gunraid:openGate', function()
 
 end)
 
+RegisterServerEvent('usa_gunraid:addPlayerToRaid') -- Server Event that gets called when the gate opens
+AddEventHandler('usa_gunraid:addPlayerToRaid', function()
+
+    table.insert(playersInRaid, source)
+
+end)
+
 RegisterServerEvent('usa_gunraid:search') -- Server Event that gets called when the player searches a crate
 AddEventHandler('usa_gunraid:search', function(search)
 	
@@ -449,5 +468,68 @@ AddEventHandler('usa_gunraid:lockboxtoofar', function()
 
 	local source = source
 	TriggerClientEvent('usa_gunraid:toofarclient', source)
+
+end)
+
+RegisterServerEvent('usa_gunraid:spawnPedsServer') -- Server Event that gets called when the player goes up the elevator and spawns peds
+AddEventHandler('usa_gunraid:spawnPedsServer', function()
+
+	local source = source
+
+	if not pedsSpawned then
+
+		pedsSpawned = true
+
+		TriggerClientEvent('usa_gunraid:spawnPeds', source)
+
+		local playersInArea = true
+		local distanceFromRaid = {}
+
+		-- for k,v in pairs(playersInRaid) do
+
+		-- 		print(v)
+
+		-- end
+
+		while playersInArea do
+
+			local distanceFromRaid = {}
+
+			Citizen.Wait(0)
+
+			for k,v in pairs(playersInRaid) do
+
+				local vec1 = GetEntityCoords(GetPlayerPed(v), false)
+
+				local vec2 = vector3(5010.34, -5748.88, 19.80)
+
+				local d1 = false
+
+				if #(vec2 - vec1) > 140 then
+					d1 = true
+				end
+
+				distanceFromRaid[k] = d1
+			end
+
+			if has_value(distanceFromRaid, true) then 
+
+				playersInArea = false
+
+				-- print("all players gone")
+
+				TriggerClientEvent("usa_gunraid:deletePeds", source)
+
+				playersInRaid = {}
+
+				pedsSpawned = false
+
+				Config.GateLastHacked = os.time()
+
+			end
+
+		end
+
+	end
 
 end)
