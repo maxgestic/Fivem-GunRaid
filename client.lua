@@ -254,6 +254,7 @@ function start_tracking() -- Fuction to start tracking
     v1 = CreateVehicle(vhash, Config.LimoSpawnCoords[random], true, false)
     -- v1 = CreateVehicle(vhash, -980.06, -2818.48, 13.65, 149.72, true, false) --DEBUG ONLY
     SetVehicleOnGroundProperly(v1)
+    SetEntityAsMissionEntity(v1, true, true)
 
     RequestModel(dhash)
     while not HasModelLoaded(dhash) do
@@ -261,12 +262,14 @@ function start_tracking() -- Fuction to start tracking
     end
 
     d1 = CreatePedInsideVehicle(v1, 4, dhash, -1, true, false)
-
-    TaskVehicleDriveToCoordLongrange(d1, v1, Config.LimoDestination, 26.0, 447, 0)
+    SetEntityAsMissionEntity(v1, false, false)
     SetPedKeepTask(d1, true)
+    SetBlockingOfNonTemporaryEvents(d1, true)
     SetPedDiesInVehicle(d1, false)
     SetPedDiesInSinkingVehicle(d1, false)
     SetPedDiesWhenInjured(d1, false)
+
+    TaskVehicleDriveToCoordLongrange(d1, v1, Config.LimoDestination, 26.0, 447, 0)
 
     limoMoving = true
 
@@ -1040,7 +1043,7 @@ Citizen.CreateThread(function() -- Limo Tracking & Downloading Thread
 
                     alert("The phone of the target has been destroyed!")
 
-
+                    targetsEntity = {}
 
                     Citizen.Wait(1000)
 
@@ -1070,6 +1073,8 @@ Citizen.CreateThread(function() -- Thread to check if limo arrived
                 limoMoving = false
 
                 alert("The tracker signal has been lost!")
+
+                targetsEntity = {}
 
                 DeletePed(d1)
                 DeleteVehicle(v1)
