@@ -216,14 +216,14 @@ AddEventHandler('usa_gunraid:search', function(search)
 		if crate.searching == false then 
 			crate.searching = true
 			local letters = "abcdefghijklmnopqrstuvwxyz"
-            local numbers = "0123456789"
-            local characterSet = letters .. numbers
-            local keyL = Config.CodeLength 
-            local key = ""
-            for i = 1, keyL do 
-                local rand = math.random(#characterSet)
-                key = key .. string.sub(characterSet, rand, rand)
-            end
+			local numbers = "0123456789"
+			local characterSet = letters .. numbers
+			local keyL = Config.CodeLength 
+			local key = ""
+			for i = 1, keyL do 
+				local rand = math.random(#characterSet)
+				key = key .. string.sub(characterSet, rand, rand)
+			end
 			local keySaved = key
 			searchers[source] = key
 			TriggerClientEvent('usa_gunraid:notify', source, "Starting to search Crate!")
