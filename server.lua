@@ -14,6 +14,16 @@ local pedsSpawned = false
 local playersInRaid = {}
 local pedNets = {}
 
+local hackingTablet = {
+	name = "Hacking Tablet",
+	price = 10000,
+	type = "misc",
+	quantity = 1,
+	legality = "illigal",
+	weight = 10,
+	invisibleWhenDropped = false
+}
+
 local function has_value (tab, val)
     for index, value in ipairs(tab) do
         if value == val then
@@ -44,16 +54,32 @@ end)
 RegisterServerEvent('usa_gunraid:BuyFromPed') -- Server Event that checks if player has enough cash to get advice and hacking tablet, if so gives tablet
 AddEventHandler('usa_gunraid:BuyFromPed', function()
 
-	-- PLACEHOLDER CHECK IF SOURCE HAS 10000 DOLLARS IN CASH
+	-- local c = exports["usa-characters"]:GetCharacter(source)
 
-	-- PLACEHOLDER TAKE 10000 DOLLARS FROM SOURCE
+	-- -- take money
+	-- if c.get("money") >= hackingTablet.price then
 
-	-- GIVE SOURCE ONE HACKING TABLET
+	-- 	if c.canHoldItem(hackingTablet) then
 
+	-- 		-- give to player
+	-- 		c.removeMoney(hackingTablet.price)
+	-- 		c.giveItem(hackingTablet)
+	-- 		TriggerClientEvent('usa_gunraid:PedInfo', source)
+
+	-- 	else 
+
+	-- 		TriggerClientEvent("usa:notify", source, "Inventory full!")
+
+	-- 	end
+		
+	-- else
+
+	-- 	TriggerClientEvent('usa_gunraid:NoMoneyPed', source)
+
+	-- end
+
+	-- PLACEHOLDER REMOVE ON LIVE
 	TriggerClientEvent('usa_gunraid:PedInfo', source)
-
-	-- PLACEHOLDER IF SOURCE DOES NOT HAVE 10000 CASH 
-
 	TriggerClientEvent('usa_gunraid:NoMoneyPed', source)
 
 end)
