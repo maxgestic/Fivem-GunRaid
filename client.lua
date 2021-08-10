@@ -469,26 +469,24 @@ AddEventHandler('usa_gunraid:spawnPeds', function()
     while not HasModelLoaded(ped) do
         Citizen.Wait(1)
     end
-    for k,v in pairs(Config.NPCSpawns) do
-        table.insert(guardPeds, CreatePed(4, ped, v.x, v.y, v.z, v.w, true, true))
-    end
-    for k,v in pairs(guardPeds) do
-        SetEntityAsMissionEntity(v, true, true)
-        SetPedRelationshipGroupHash(v, 0x84DCFAAD)
+    for i = 1,#Config.NPCSpawns do
+        local v = Config.NPCSpawns[i]
+        table.insert(guardPeds, CreatePed(4, ped, v.x, v.y, v.z, v.w, true, false))
+        SetEntityAsMissionEntity(guardPeds[i], true, true)
+        SetPedRelationshipGroupHash(guardPeds[i], 0x84DCFAAD)
         local randomWep = math.random(1, #Config.NPCWeapons)
-        GiveWeaponToPed(v, GetHashKey(Config.NPCWeapons[randomWep]), 9999, true, true)
+        GiveWeaponToPed(guardPeds[i], GetHashKey(Config.NPCWeapons[randomWep]), 9999, true, true)
         print("gave weapon ".. randomWep)
-        SetPedAccuracy(v, 30)
-        SetPedAsEnemy(v, true)
-        SetPedFleeAttributes(v, 0, 0)
-        SetPedCombatAttributes(v, 16, 1)
-        SetPedCombatAttributes(v, 46, true)
-        SetPedCombatMovement(v, 1)
-        SetPedCombatRange(v, 1)
-        SetPedSeeingRange(v, 30.00)
-        SetPedHearingRange(v, 80.00)
-        SetPedDropsWeaponsWhenDead(v, false)
-        pedNets[k] = PedToNet(v)
+        SetPedAccuracy(guardPeds[i], 30)
+        SetPedFleeAttributes(guardPeds[i], 0, 0)
+        SetPedCombatAttributes(guardPeds[i], 16, 1)
+        SetPedCombatAttributes(guardPeds[i], 46, true)
+        SetPedCombatMovement(guardPeds[i], 1)
+        SetPedCombatRange(guardPeds[i], 1)
+        SetPedSeeingRange(guardPeds[i], 30.00)
+        SetPedHearingRange(guardPeds[i], 80.00)
+        SetPedDropsWeaponsWhenDead(guardPeds[i], false)
+        pedNets[i] = PedToNet(guardPeds[i])
     end
     TriggerServerEvent('usa_gunraid:getNetIDs', pedNets)
     pedNets = {}
@@ -577,6 +575,12 @@ Citizen.CreateThread(function() -- innit thread to spawn props
     SetEntityHeading(box, 336.06)
     SetEntityAsMissionEntity(box, true, true)
     spawn_gate()
+
+    local ped = GetHashKey("g_m_m_cartelguards_01")
+    RequestModel(ped)
+    while not HasModelLoaded(ped) do
+        Citizen.Wait(1)
+    end
 end)
 
 Citizen.CreateThread(function() -- NPC Conversation 

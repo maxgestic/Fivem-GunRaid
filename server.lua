@@ -45,7 +45,7 @@ end)
 
 RegisterServerEvent('usa_gunraid:BuyFromPed') -- Server Event that checks if player has enough cash to get advice and hacking tablet, if so gives tablet
 AddEventHandler('usa_gunraid:BuyFromPed', function()
-	local c = exports["usa-characters"]:GetCharacter(source)
+	--local c = exports["usa-characters"]:GetCharacter(source)
 	-- if c.get("money") >= hackingTablet.price then
 	-- 	if c.canHoldItem(hackingTablet) then
 	-- 		-- give to player
@@ -60,6 +60,7 @@ AddEventHandler('usa_gunraid:BuyFromPed', function()
 	-- end
 
 	-- PLACEHOLDER REMOVE ON LIVE
+
 	TriggerClientEvent('usa_gunraid:PedInfo', source)
 	TriggerClientEvent('usa_gunraid:NoMoneyPed', source)
 	-- END OF PLACEHOLDER
@@ -321,13 +322,13 @@ end)
 
 RegisterServerEvent('usa_gunraid:spawnPedsServer') -- Server Event that gets called when the player goes up the elevator and spawns peds
 AddEventHandler('usa_gunraid:spawnPedsServer', function()
-	local source = source
+	local loc_source = source
 	if not pedsSpawned then
 		for k,v in pairs(playersInRaid) do
 			print(k,v)
 		end
 		pedsSpawned = true
-		TriggerClientEvent('usa_gunraid:spawnPeds', source)
+		TriggerClientEvent('usa_gunraid:spawnPeds', loc_source)
 		local playersInArea = true
 		local distanceFromRaid = {}
 		while playersInArea do
@@ -369,7 +370,7 @@ end)
 
 RegisterServerEvent('usa_gunraid:deletePeds') -- Server Event that gets called when the player goes up the elevator and spawns peds
 AddEventHandler('usa_gunraid:deletePeds', function(val)
-	-- print("deletiong peds")
+	print("deletiong peds")
 	for k,v in pairs(pedNets) do
 	    local ent = NetworkGetEntityFromNetworkId(v)
 	    -- print(ent)
