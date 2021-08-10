@@ -16,9 +16,9 @@ local hack_shown = false
 local hackerblip
 local hackerTracked = false
 local hacktracktimer = 0
-local d1, v1
 local gate_open = false
 local currentBlips = {}
+local limo1, driver1, l1net, d1net
 local isPolice = false -- PLACEHOLDER FOR BEING ON DUTY AS POLICE
 
 
@@ -156,45 +156,46 @@ function elevator_result(success, timeremaining, finish) -- Elevator Gate Result
     return
 end
 
-function start_tracking() -- Fuction to start tracking 
-    DeletePed(d1)
-    DeleteVehicle(v1)
-    local vhash = GetHashKey('stretch')
-    local dhash = GetHashKey('g_m_m_casrn_01')
-    RequestModel(vhash)
-    while not HasModelLoaded(vhash) do
-        Citizen.Wait(1)
-    end
-    local count = 0
-    for _ in pairs(Config.LimoSpawnCoords) do count = count + 1 end
-    random = math.random(count)
-    v1 = CreateVehicle(vhash, Config.LimoSpawnCoords[random], true, false)
-    -- v1 = CreateVehicle(vhash, -980.06, -2818.48, 13.65, 149.72, true, false) --DEBUG ONLY
-    SetVehicleOnGroundProperly(v1)
-    SetEntityAsMissionEntity(v1, true, true)
-    RequestModel(dhash)
-    while not HasModelLoaded(dhash) do
-        Citizen.Wait(1)
-    end
-    d1 = CreatePedInsideVehicle(v1, 4, dhash, -1, true, false)
-    SetEntityAsMissionEntity(v1, false, false)
-    SetPedKeepTask(d1, true)
-    SetBlockingOfNonTemporaryEvents(d1, true)
-    SetPedDiesInVehicle(d1, false)
-    SetPedDiesInSinkingVehicle(d1, false)
-    SetPedDiesWhenInjured(d1, false)
-    TaskVehicleDriveToCoordLongrange(d1, v1, Config.LimoDestination, 26.0, 447, 0)
-    limoMoving = true
-    table.insert(targetsEntity,v1)
-    TriggerEvent('mtracker:settargets', targetsEntity)
-    notify("Starting Tracker hide and show with HOME")
-    TriggerEvent('mtracker:start')
-    local idval = (GetPlayerPed(-1))
-    TriggerServerEvent("usa_gunraid:hackcomplete")
-    tracker_active = true
-    tracker_shown = true
-    secondsRemaining = Config.TimeToDownload 
-end
+-- function start_tracking_old() -- Fuction to start tracking 
+    --     DeletePed(d1)
+    --     DeleteVehicle(v1)
+    --     local vhash = GetHashKey('stretch')
+    --     local dhash = GetHashKey('g_m_m_casrn_01')
+    --     RequestModel(vhash)
+    --     while not HasModelLoaded(vhash) do
+    --         Citizen.Wait(1)
+    --     end
+    --     RequestModel(dhash)
+    --     while not HasModelLoaded(dhash) do
+    --         Citizen.Wait(1)
+    --     end
+    --     local count = 0
+    --     for _ in pairs(Config.LimoSpawnCoords) do count = count + 1 end
+    --     random = math.random(count)
+    --     v1 = CreateVehicle(vhash, Config.LimoSpawnCoords[random], true, false)
+    --     -- v1 = CreateVehicle(vhash, -980.06, -2818.48, 13.65, 149.72, true, false) --DEBUG ONLY
+    --     SetVehicleOnGroundProperly(v1)
+    --     SetEntityAsMissionEntity(v1, true, true)
+        
+    --     d1 = CreatePedInsideVehicle(v1, 4, dhash, -1, true, false)
+    --     SetEntityAsMissionEntity(v1, false, false)
+    --     SetPedKeepTask(d1, true)
+    --     SetBlockingOfNonTemporaryEvents(d1, true)
+    --     SetPedDiesInVehicle(d1, false)
+    --     SetPedDiesInSinkingVehicle(d1, false)
+    --     SetPedDiesWhenInjured(d1, false)
+    --     TaskVehicleDriveToCoordLongrange(d1, v1, Config.LimoDestination, 26.0, 447, 0)
+    --     limoMoving = true
+    --     table.insert(targetsEntity,v1)
+    --     TriggerEvent('mtracker:settargets', targetsEntity)
+    --     notify("Starting Tracker hide and show with HOME")
+    --     TriggerEvent('mtracker:start')
+    --     local idval = (GetPlayerPed(-1))
+    --     TriggerServerEvent("usa_gunraid:hackcomplete")
+    --     tracker_active = true
+    --     tracker_shown = true
+    --     secondsRemaining = Config.TimeToDownload 
+-- end
 
 function RemoveBlips()
     for i = #currentBlips, 1, -1 do
@@ -391,6 +392,56 @@ AddEventHandler('usa_gunraid:hackfailReturn', function(locked)
     end
 end)
 
+RegisterNetEvent("usa_gunraid:startTracking")
+AddEventHandler("usa_gunraid:startTracking", function()
+
+    DeleteEntity(driver1)
+    DeleteEntity(limo1)
+
+    print()
+
+    local vhash = GetHashKey('stretch')
+    RequestModel(vhash)
+    while not HasModelLoaded(vhash) do
+        Citizen.Wait(1)
+    end
+    random = math.random(#Config.LimoSpawnCoords)
+    limo1 = CreateVehicle(vhash, Config.LimoSpawnCoords[random], true, false)
+    while not DoesEntityExist(limo1) do
+        Wait(1)
+    end
+    l1net = NetworkGetNetworkIdFromEntity(limo1)
+    SetEntityAsMissionEntity(limo1, true, true)
+    --DEBUG
+    local limoblip = AddBlipForEntity(limo1)
+    SetBlipSprite(limoblip, 198)
+    SetBlipFlashes(limoblip, true)
+    SetBlipFlashTimer(limoblip, 5000)
+    --END OF DEBUG
+    SetModelAsNoLongerNeeded(vhash)
+    print("Limo Spawned")
+
+    local dhash = GetHashKey('g_m_m_casrn_01')
+    RequestModel(dhash)
+    while not HasModelLoaded(dhash) do
+        Citizen.Wait(1)
+    end
+    driver1 = CreatePedInsideVehicle(limo1, 4, dhash, -1, true, false)
+    while not DoesEntityExist(driver1) do
+        Wait(1)
+    end
+    d1net = NetworkGetNetworkIdFromEntity(driver1)
+    SetBlockingOfNonTemporaryEvents(driver1, true)
+    SetEntityAsMissionEntity(driver1, true, true)
+    SetModelAsNoLongerNeeded(dhash)
+
+    print("Driver Spawned")
+
+    TaskVehicleDriveToCoordLongrange(driver1, limo1, Config.LimoDestination, 26.0, 447, 0)
+    SetPedKeepTask(driver1, true)
+
+end)
+
 RegisterNetEvent('usa_gunraid:inspectReturn') -- Event when police officer inspects cell tower
 AddEventHandler('usa_gunraid:inspectReturn', function(isHacked, cooldown, time)
     time = tonumber(string.format("%." .. 0 .. "f", time))
@@ -545,7 +596,7 @@ RegisterCommand("codes", function (source, args)
 end)
 
 RegisterCommand("spawntrack", function (source, args)
-    start_tracking()
+    TriggerServerEvent('usa_gunraid:hackcomplete')
 end)
 
 RegisterCommand("tplimo", function (source, args)
@@ -554,8 +605,8 @@ RegisterCommand("tplimo", function (source, args)
 end)
 
 RegisterCommand("deletelimo", function(source, args)
-    DeletePed(d1)
-    DeleteVehicle(v1)
+    DeleteEntity(driver1)
+    DeleteEntity(limo1)
 end)
 
 RegisterCommand("togglep", function (source, args)
@@ -571,8 +622,11 @@ end)
 RegisterCommand("removegate", function (source, args)
     TriggerServerEvent("usa_gunraid:openGate")
 end)
--- END OF DEBUG COMMANDS --
 
+RegisterCommand("rement", function (source, args)
+    DeleteEntity(args[1])
+end)
+-- END OF DEBUG COMMANDS --
 
 Citizen.CreateThread(function() -- innit thread to spawn props
     box_blip = AddBlipForCoord(4968.76, -5796.05, 19.9)

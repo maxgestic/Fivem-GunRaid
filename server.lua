@@ -92,10 +92,13 @@ end)
 
 RegisterServerEvent('usa_gunraid:hackcomplete') -- Server Event that gets called when player completes cell tower hack
 AddEventHandler('usa_gunraid:hackcomplete', function()
+	local loc_source = source
 	TowerHacking = false
 	isThereSignal = true
-	hacker = GetPlayerPed(source)
+	hacker = GetPlayerPed(loc_source)
 	Config.LastHacked = os.time() 
+
+	TriggerClientEvent('usa_gunraid:startTracking',loc_source)
 end)
 
 RegisterServerEvent('usa_gunraid:hackfail') -- Server Event that gets called when player fails cell tower hack
@@ -363,14 +366,6 @@ AddEventHandler('usa_gunraid:spawnPedsServer', function()
 				Config.GateLastHacked = os.time()
 			end
 		end
-	end
-end)
-
-RegisterServerEvent('usa_gunraid:getNetIDs') -- Server Event that gets called when the player goes up the elevator and spawns peds
-AddEventHandler('usa_gunraid:getNetIDs', function(val)
-	for k,v in pairs(val) do
-		table.insert(pedNets, v)
-		-- print(v)
 	end
 end)
 
