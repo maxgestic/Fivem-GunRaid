@@ -492,11 +492,6 @@ end)
 
 -- DEBUG COMMANDS --
 RegisterCommand("spawnPeds", function(source, args)
-    local pedModel = GetHashKey("g_m_m_cartelguards_01")
-    RequestModel(pedModel)
-    while not HasModelLoaded(pedModel) do
-        Citizen.Wait(1)
-    end
     TriggerServerEvent('usa_gunraid:addPlayerToRaid')
     TriggerServerEvent("usa_gunraid:spawnPedsServer")
 end)
@@ -570,10 +565,9 @@ Citizen.CreateThread(function() -- innit thread to spawn props
     SetEntityHeading(box, 336.06)
     SetEntityAsMissionEntity(box, true, true)
     spawn_gate()
-
-    local ped = GetHashKey("g_m_m_cartelguards_01")
-    RequestModel(ped)
-    while not HasModelLoaded(ped) do
+    local pedModel = GetHashKey("g_m_m_cartelguards_01")
+    RequestModel(pedModel)
+    while not HasModelLoaded(pedModel) do
         Citizen.Wait(1)
     end
 end)
