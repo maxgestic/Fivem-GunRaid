@@ -18,7 +18,7 @@ local hackingTablet = {
 	price = 10000,
 	type = "misc",
 	quantity = 1,
-	legality = "illigal",
+	legality = "illegal",
 	weight = 10,
 	invisibleWhenDropped = false
 }
