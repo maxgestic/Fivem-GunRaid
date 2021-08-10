@@ -19,8 +19,6 @@ local hacktracktimer = 0
 local d1, v1
 local gate_open = false
 local currentBlips = {}
-local guardPeds = {}
-local pedNets = {}
 local isPolice = false -- PLACEHOLDER FOR BEING ON DUTY AS POLICE
 
 
@@ -463,45 +461,42 @@ AddEventHandler('usa_gunraid:SpawnGate', function()
 end)
 
 RegisterNetEvent('usa_gunraid:spawnPeds') -- Event to spawn hostile peds
-AddEventHandler('usa_gunraid:spawnPeds', function()
-    local ped = GetHashKey("g_m_m_cartelguards_01")
-    RequestModel(ped)
-    while not HasModelLoaded(ped) do
-        Citizen.Wait(1)
+AddEventHandler('usa_gunraid:spawnPeds', function(pedTable)
+    local pedNets = pedTable
+    local guardPeds = {}
+    for i = 1, #pedTable do
+        local netID = pedNets[i]
+        repeat
+        Wait(10)
+        until NetToPed(pedNets[i]) > 0
+        table.insert(guardPeds, NetToPed(pedNets[i])) 
+        for i = 1,#guardPeds do
+            local v = guardPeds[i]
+            SetEntityAsMissionEntity(guardPeds[i], true, true)
+            SetPedRelationshipGroupHash(guardPeds[i], 0x84DCFAAD)
+            local randomWep = math.random(1, #Config.NPCWeapons)
+            GiveWeaponToPed(guardPeds[i], GetHashKey(Config.NPCWeapons[randomWep]), 9999, true, true)
+            print("gave weapon ".. randomWep)
+            SetPedAccuracy(guardPeds[i], 30)
+            SetPedFleeAttributes(guardPeds[i], 0, 0)
+            SetPedCombatAttributes(guardPeds[i], 16, 1)
+            SetPedCombatAttributes(guardPeds[i], 46, true)
+            SetPedCombatMovement(guardPeds[i], 1)
+            SetPedCombatRange(guardPeds[i], 1)
+            SetPedSeeingRange(guardPeds[i], 30.00)
+            SetPedHearingRange(guardPeds[i], 80.00)
+            SetPedDropsWeaponsWhenDead(guardPeds[i], false)
+        end
     end
-    for i = 1,#Config.NPCSpawns do
-        local v = Config.NPCSpawns[i]
-        table.insert(guardPeds, CreatePed(4, ped, v.x, v.y, v.z, v.w, true, false))
-        SetEntityAsMissionEntity(guardPeds[i], true, true)
-        SetPedRelationshipGroupHash(guardPeds[i], 0x84DCFAAD)
-        local randomWep = math.random(1, #Config.NPCWeapons)
-        GiveWeaponToPed(guardPeds[i], GetHashKey(Config.NPCWeapons[randomWep]), 9999, true, true)
-        print("gave weapon ".. randomWep)
-        SetPedAccuracy(guardPeds[i], 30)
-        SetPedFleeAttributes(guardPeds[i], 0, 0)
-        SetPedCombatAttributes(guardPeds[i], 16, 1)
-        SetPedCombatAttributes(guardPeds[i], 46, true)
-        SetPedCombatMovement(guardPeds[i], 1)
-        SetPedCombatRange(guardPeds[i], 1)
-        SetPedSeeingRange(guardPeds[i], 30.00)
-        SetPedHearingRange(guardPeds[i], 80.00)
-        SetPedDropsWeaponsWhenDead(guardPeds[i], false)
-        pedNets[i] = PedToNet(guardPeds[i])
-    end
-    TriggerServerEvent('usa_gunraid:getNetIDs', pedNets)
-    pedNets = {}
-end)
-
-RegisterNetEvent('usa_gunraid:deletePeds') -- Event to delete hostile peds
-AddEventHandler('usa_gunraid:deletePeds', function()
-    for k,v in pairs(guardPeds) do
-        DeletePed(v)
-    end
-    guardPeds = {}
 end)
 
 -- DEBUG COMMANDS --
 RegisterCommand("spawnPeds", function(source, args)
+    local pedModel = GetHashKey("g_m_m_cartelguards_01")
+    RequestModel(pedModel)
+    while not HasModelLoaded(pedModel) do
+        Citizen.Wait(1)
+    end
     TriggerServerEvent('usa_gunraid:addPlayerToRaid')
     TriggerServerEvent("usa_gunraid:spawnPedsServer")
 end)

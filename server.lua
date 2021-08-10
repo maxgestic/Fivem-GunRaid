@@ -13,6 +13,7 @@ local elevatorHacking = false
 local pedsSpawned = false
 local playersInRaid = {}
 local pedNets = {}
+local guardPeds = {}
 local hackingTablet = {
 	name = "Hacking Tablet",
 	price = 10000,
@@ -324,11 +325,15 @@ RegisterServerEvent('usa_gunraid:spawnPedsServer') -- Server Event that gets cal
 AddEventHandler('usa_gunraid:spawnPedsServer', function()
 	local loc_source = source
 	if not pedsSpawned then
-		for k,v in pairs(playersInRaid) do
-			print(k,v)
-		end
 		pedsSpawned = true
-		TriggerClientEvent('usa_gunraid:spawnPeds', loc_source)
+		for i = 1, #Config.NPCSpawns do
+			local v = Config.NPCSpawns[i]
+			table.insert(guardPeds, CreatePed(4, GetHashKey("g_m_m_cartelguards_01"), v.x, v.y, v.z, v.w, true, false))
+			table.insert(pedNets, NetworkGetNetworkIdFromEntity(guardPeds[i]))
+			-- print(pedNets[i])
+			-- print(guardPeds[i])
+		end
+		TriggerClientEvent('usa_gunraid:spawnPeds', loc_source, pedNets)
 		local playersInArea = true
 		local distanceFromRaid = {}
 		while playersInArea do
@@ -345,12 +350,11 @@ AddEventHandler('usa_gunraid:spawnPedsServer', function()
 			end
 			if not has_value(distanceFromRaid, false) then 
 				playersInArea = false
-				for k,v in pairs(pedNets) do
-				    local ent = NetworkGetEntityFromNetworkId(v)
-				    -- print(ent)
-				    DeleteEntity(ent)
+				-- print("deletiong peds")
+				for i = 1, #guardPeds do
+					DeleteEntity(guardPeds[i])
 				end
-				TriggerClientEvent('usa_gunraid:deletePeds', -1)
+				guardPeds = {}
 				pedNets = {}
 				pedsSpawned = false
 				playersInRaid = {}
@@ -371,12 +375,10 @@ end)
 RegisterServerEvent('usa_gunraid:deletePeds') -- Server Event that gets called when the player goes up the elevator and spawns peds
 AddEventHandler('usa_gunraid:deletePeds', function(val)
 	print("deletiong peds")
-	for k,v in pairs(pedNets) do
-	    local ent = NetworkGetEntityFromNetworkId(v)
-	    -- print(ent)
-	    DeleteEntity(ent)
+	for i = 1, #guardPeds do
+		DeleteEntity(guardPeds[i])
 	end
-	TriggerClientEvent('usa_gunraid:deletePeds', -1)
+	guardPeds = {}
 	pedNets = {}
 	pedsSpawned = false
 	playersInRaid = {}
