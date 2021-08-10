@@ -464,29 +464,52 @@ RegisterNetEvent('usa_gunraid:spawnPeds') -- Event to spawn hostile peds
 AddEventHandler('usa_gunraid:spawnPeds', function(pedTable)
     local pedNets = pedTable
     local guardPeds = {}
-    for i = 1, #pedTable do
-        local netID = pedNets[i]
+
+    local count = 1
+
+    while not (count == #pedTable) do
+
+        Wait(0)
+
         repeat
-        Wait(10)
-        until NetToPed(pedNets[i]) > 0
-        table.insert(guardPeds, NetToPed(pedNets[i])) 
-        for i = 1,#guardPeds do
-            local v = guardPeds[i]
-            SetEntityAsMissionEntity(guardPeds[i], true, true)
-            SetPedRelationshipGroupHash(guardPeds[i], 0x84DCFAAD)
-            local randomWep = math.random(1, #Config.NPCWeapons)
-            GiveWeaponToPed(guardPeds[i], GetHashKey(Config.NPCWeapons[randomWep]), 9999, true, true)
-            print("gave weapon ".. randomWep)
-            SetPedAccuracy(guardPeds[i], 30)
-            SetPedFleeAttributes(guardPeds[i], 0, 0)
-            SetPedCombatAttributes(guardPeds[i], 16, 1)
-            SetPedCombatAttributes(guardPeds[i], 46, true)
-            SetPedCombatMovement(guardPeds[i], 1)
-            SetPedCombatRange(guardPeds[i], 1)
-            SetPedSeeingRange(guardPeds[i], 30.00)
-            SetPedHearingRange(guardPeds[i], 80.00)
-            SetPedDropsWeaponsWhenDead(guardPeds[i], false)
+        Wait(0)
+        until NetToPed(pedNets[count]) > 0
+
+        print(count)
+
+        count = count + 1
+
+    end
+
+    for i = 1, #pedTable do
+
+        local netID = pedNets[i]
+
+        
+
+        NetworkRequestControlOfNetworkId(netID)
+        while not NetworkHasControlOfNetworkId(netID) do
+            Citizen.Wait(0)
         end
+
+        table.insert(guardPeds, NetToPed(netID))
+        local v = NetToPed(netID)
+        SetEntityAsMissionEntity(v, true, true)
+        SetPedRelationshipGroupHash(v, 0x84DCFAAD)
+        SetPedAccuracy(v, 30)
+        SetPedFleeAttributes(v, 0, 0)
+        SetPedCombatAttributes(v, 16, 1)
+        SetPedCombatAttributes(v, 46, true)
+        SetPedCombatMovement(v, 1)
+        SetPedCombatRange(v, 1)
+        SetPedSeeingRange(v, 30.00)
+        SetPedHearingRange(v, 80.00)
+        local randomWep = math.random(1, #Config.NPCWeapons)
+        GiveWeaponToPed(v, GetHashKey(Config.NPCWeapons[randomWep]), 9999, true, true)
+        -- print("gave weapon ".. randomWep)
+        SetPedDropsWeaponsWhenDead(v, false)
+        SetBlockingOfNonTemporaryEvents(v, false)
+
     end
 end)
 

@@ -329,7 +329,9 @@ AddEventHandler('usa_gunraid:spawnPedsServer', function()
 		for i = 1, #Config.NPCSpawns do
 			local v = Config.NPCSpawns[i]
 			table.insert(guardPeds, CreatePed(4, GetHashKey("g_m_m_cartelguards_01"), v.x, v.y, v.z, v.w, true, false))
+			SetPedRandomComponentVariation(guardPeds[i], false)
 			table.insert(pedNets, NetworkGetNetworkIdFromEntity(guardPeds[i]))
+			SetPedConfigFlag(guardPeds[i], 17, true)
 			-- print(pedNets[i])
 			-- print(guardPeds[i])
 		end

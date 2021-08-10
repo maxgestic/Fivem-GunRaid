@@ -67,7 +67,7 @@ Config.NPCSpawns = {
 	vector4(4978.97, -5712.79, 19.88, 36.34),
 	vector4(4985.64, -5714.02, 19.88, 225.05)
 }
-Config.NPCWeapons = {"weapon_machete", "weapon_snspistol", "weapon_microsmg", "weapon_dbshotgun", "weapon_assaultrifle", "weapon_carbinerifle"}
+Config.NPCWeapons = {"weapon_machete", "weapon_snspistol", "weapon_microsmg", "weapon_dbshotgun", "weapon_assaultrifle"}
 
 crates = { -- Array of Crates in mansion
 	["crate_1"] = {
